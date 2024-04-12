@@ -1,1 +1,1 @@
-# coral-data-collection-tool
+# CoRal data collection tool
