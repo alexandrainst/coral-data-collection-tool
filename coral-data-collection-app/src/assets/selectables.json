@@ -1,0 +1,75 @@
+{
+  "noiseTypes": ["Ingen", "Trafik", "Mennesker"],
+  "sexes": [
+    { "label": "Mand (inklusiv trans-mand)", "code": "M" },
+    { "label": "Kvinde (inklusiv trans-kvinde)", "code": "F" },
+    { "label": "Non-binær", "code": "N" }
+  ],
+  "levelsOfEducation": [
+    "Grundskole",
+    "Gymnasiel uddannelse",
+    "Erhvervsfaglig uddannelse",
+    "Adgangsgivende uddannelsesforløb",
+    "Kort videregående uddannelse",
+    "Mellemlang videregående uddannelse",
+    "Lang videregående uddannelse",
+    "Bachelor uddannelse",
+    "Phd og forskeruddannelse"
+  ],
+  "dialects": {
+    "Sjællandsk": [
+      "Sjællandsk",
+      "Københavnsk",
+      "Amagermål",
+      "Nordsjællandsk",
+      "Nordvestsjællandsk",
+      "Sydvestsjællandsk",
+      "Østsjællandsk",
+      "Sydsjællandsk (sydligt sydsjællandsk)"
+    ],
+    "Østjysk": [
+      "Østjysk",
+      "Vendsysselsk (m. Hanherred og Læsø)",
+      "Himmerlandsk",
+      "Ommersysselsk",
+      "Djurslandsk (Nord-, Syddjurs m. Nord- og Sydsamsø, Anholt)",
+      "Midtøstjysk"
+    ],
+    "Sydømål": [
+      "Sydømål",
+      "Østmønskvestmønsk",
+      "Nordfalstersk",
+      "Sydfalstersk",
+      "Lollandsk"
+    ],
+    "Sønderjysk": [
+      "Sønderjysk",
+      "Vestlig sønderjysk (m. Mandø og Rømø)",
+      "Østligt sønderjysk (m. Als)",
+      "Mellemslesvisk",
+      "Angelmål",
+      "Fjoldemål"
+    ],
+    "Fynsk": [
+      "Fynsk",
+      "Østfynsk",
+      "Vestfynsk (nordvest-, sydvestfynsk)",
+      "Sydfynsk",
+      "Langelandsk",
+      "Tåsingsk (m. Thurø)",
+      "Ærøsk (m. Lyø, Avernakø, Strynø, Birkholm, Drejø)"
+    ],
+    "Vestjysk": [
+      "Vestjysk",
+      "Thybomål",
+      "Morsingmål",
+      "Sallingmål",
+      "Hardsysselsk",
+      "Fjandbomål",
+      "Sydvestjysk (m. Fanø)",
+      "Sydøstjysk"
+    ],
+    "Nørrejysk": ["Nørrejysk", "Vestjysk", "Østjysk"],
+    "Bornholmsk": ["Bornholmsk"]
+  }
+}

@@ -26,10 +26,13 @@ type Styles = {
 export const createStyles = <T extends Styles>(styles: T): T => styles
 
 export const colors = {
-  darkOrange: '#ff8c00',
+  darkOrange: '#e05a00 ',
   darkGreen: '#146552',
+  green: 'green',
   darkRed: '#cc0000',
   darkBlue: '#2c456b',
+  darkGrey: '#2d2d2d',
+  lightGrey: 'rgb(210, 210, 210)',
   black: '#000000',
   white: '#ffffff',
 }
@@ -61,28 +64,37 @@ theme = createTheme(theme, {
   },
   palette: {
     primary: {
-      main: colors.darkBlue,
+      main: colors.darkOrange,
     },
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          '&:hover': {
+            backgroundColor: colors.green,
+          },
+        },
+      },
+    },
     MuiTypography: {
       styleOverrides: {
         root: {
           fontFamily,
         },
         h1: {
-          fontSize: 32,
-          fontWeight: 700,
+          fontSize: 42,
+          fontWeight: 400,
           color: colors.black,
         },
         h2: {
-          fontSize: 28,
-          fontWeight: 700,
+          fontSize: 36,
+          fontWeight: 350,
           color: colors.black,
         },
         h3: {
-          fontSize: 24,
-          fontWeight: 700,
+          fontSize: 28,
+          fontWeight: 300,
           color: colors.black,
         },
         h4: {
@@ -96,8 +108,8 @@ theme = createTheme(theme, {
           color: colors.black,
         },
         h6: {
-          fontSize: 15,
-          fontWeight: 500,
+          fontSize: 14,
+          fontWeight: 400,
           color: colors.black,
         },
       },
