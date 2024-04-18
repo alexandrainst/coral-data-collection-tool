@@ -20,20 +20,15 @@ import {
   basicValidText,
   validEmail,
   validPostalCode,
-  validDimensions,
   validDimensionsInput,
   validNumber,
   generateEmptyUserData,
   generateEmptySupervisorData,
-  userInputDataToDataKey,
+  userInputDataToServerType,
+  languageOptions,
+  countryOptions,
 } from './utils'
-import {
-  UserInputData,
-  SupervisorInputData,
-  DialectOption,
-  TextRecordingKey,
-  UserDataKey,
-} from './types'
+import { UserInputData, SupervisorInputData, DialectOption } from './types'
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle'
 import { styles } from './style'
 import {
@@ -42,16 +37,10 @@ import {
   MediaRecorder,
 } from 'extendable-media-recorder'
 
-import { countries, languages } from 'countries-list'
 import selectables from './assets/selectables.json' assert { type: 'json' }
 import SkipNextIcon from '@mui/icons-material/SkipNext'
-import { useGetTextToRecord } from './api/hooks/useGetTextToRecord'
-import { useApi } from './api/ApiProvider'
-import { useMutation } from '@tanstack/react-query'
+import { trpc } from './trpc.ts'
 
-// Transformed static select options
-const countryOptions = Object.values(countries).map(c => c.native)
-const languageOptions = Object.values(languages).map(l => l.native)
 const dialectOptions: DialectOption[] = Object.entries(
   selectables.dialects
 ).flatMap(entry =>
@@ -71,16 +60,6 @@ const recordingStopTimeMS = 1000
 let globalTextId = 0
 
 function App() {
-  const { postTextRecording, postUserData } = useApi()
-
-  const textRecordingMutation = useMutation({
-    mutationFn: async (trk: TextRecordingKey) => postTextRecording(trk),
-  })
-
-  const userDataMutation = useMutation({
-    mutationFn: async (udk: UserDataKey) => postUserData(udk),
-  })
-
   const { t } = useTranslation('common')
 
   const mediaRecorder = useRef<IMediaRecorder | undefined>()
@@ -134,9 +113,21 @@ function App() {
 
   const popperAnchor = useRef<HTMLElement | null>(null)
   const [openPopper, setOpenPopper] = useState<boolean>(false)
-  const [textId, setTextId] = useState<number>(globalTextId)
+  // const [textId, setTextId] = useState<number>(globalTextId)
 
-  const textToRecordQuery = useGetTextToRecord(textId)
+  //const textToRecordQuery = trpc.textToRecord.useQuery()
+  const infiniteTextQuery = trpc.infiniteTexts.useInfiniteQuery(
+    {
+      limit: 1,
+    },
+    {
+      getNextPageParam: text => text.cursor,
+      // initialCursor: 1, // <-- optional you can pass an initialCursor
+    }
+  )
+
+  const recordingMutation = trpc.recording.useMutation()
+  const userDataMutation = trpc.user.useMutation()
 
   // Parse cached data and setup mediarecorder
   useEffect(() => {
@@ -152,8 +143,10 @@ function App() {
     }
 
     const setBlob = (e: IBlobEvent) => {
-      textRecordingMutation
-        .mutateAsync({ recording: e.data, id: '' })
+      recordingMutation
+        .mutateAsync({
+          id: `${infiniteTextQuery.data?.pages?.[0].text?.id ?? ''}`,
+        })
         .catch(e => {
           console.log(e)
         })
@@ -161,7 +154,8 @@ function App() {
           console.log(`POST recording response: ${e}`)
         })
       globalTextId++
-      setTextId(globalTextId)
+      infiniteTextQuery.fetchNextPage()
+      //setTextId(globalTextId)
     }
 
     navigator.mediaDevices
@@ -185,7 +179,7 @@ function App() {
 
   // Add eventlisteners to handle recording
   useEffect(() => {
-    let timerId = 0
+    let timerId: any = 0
     let keyHold = false
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === 'r' && !keyHold) {
@@ -241,9 +235,15 @@ function App() {
         )
           ? ''
           : t('backgroundNoiseErrorText', { min: 1, max: 160 }),
-        roomDimensions: validDimensions(supervisorData.roomDimensions)
+        roomHeight: basicValidText(supervisorData.roomHeight)
           ? ''
-          : t('dimensionsErrorText'),
+          : t('roomHeightErrorText'),
+        roomWidth: basicValidText(supervisorData.roomWidth)
+          ? ''
+          : t('roomWidthErrorText'),
+        roomLength: basicValidText(supervisorData.roomLength)
+          ? ''
+          : t('roomLengthErrorText'),
       }) as Record<keyof SupervisorInputData, string>,
     [supervisorData]
   )
@@ -267,8 +267,9 @@ function App() {
         : t('ageErrorText', { min: 1, max: 100 }),
       sex: basicValidText(userData.sex) ? '' : t('sexErrorText'),
       dialect: basicValidText(userData.dialect) ? '' : t('dialectErrorText'),
-      nativeLanguage:
-        userData.nativeLanguage.length > 0 ? '' : t('nativeLanguagesErrorText'),
+      nativeLanguage: basicValidText(userData.nativeLanguage)
+        ? ''
+        : t('nativeLanguagesErrorText'),
       spokenLanguages:
         userData.spokenLanguages.length > 0
           ? ''
@@ -304,9 +305,11 @@ function App() {
       invalidSupervisorData
     if (!invalidInput) {
       localStorage.setItem(userDataToken, JSON.stringify(userData))
-      userDataMutation.mutateAsync(userInputDataToDataKey(userData)).then(e => {
-        console.log(`POST user data response: ${e}`)
-      })
+      userDataMutation
+        .mutateAsync(userInputDataToServerType(userData))
+        .then(e => {
+          console.log(`POST user data response: ${e}`)
+        })
     }
     setDisplayUserDataDialog(invalidInput)
   }
@@ -357,80 +360,122 @@ function App() {
 
   const handleSkipText = () => {
     globalTextId++
-    setTextId(globalTextId)
+    infiniteTextQuery.fetchNextPage()
+    //setTextId(globalTextId)
   }
 
   return (
     <>
       <Box sx={styles.root}>
-        <Stack
-          sx={styles.collectionStack}
-          direction={'column'}
-          justifyContent={'center'}
-          alignItems={'center'}
-          spacing={5}
-        >
-          <span
-            style={{ marginTop: '10px', height: '0%', width: '0%' }}
-            id="popperAnchor"
-            ref={popperAnchor}
-          />
-          <Popper
-            sx={styles.popperBox}
-            open={openPopper}
-            anchorEl={popperAnchor.current}
-            placement={'bottom'}
-            keepMounted
-          >
-            <Typography variant="h5">{t('recording')}</Typography>
-          </Popper>
+        {!displayLegalDialog &&
+          !displaySupervisorDialog &&
+          !displayUserDataDialog && (
+            <>
+              <Stack
+                sx={styles.collectionStack}
+                direction={'column'}
+                justifyContent={'center'}
+                alignItems={'center'}
+                spacing={5}
+              >
+                <span
+                  style={{ marginTop: '10px', height: '0%', width: '0%' }}
+                  id="popperAnchor"
+                  ref={popperAnchor}
+                />
+                <Popper
+                  sx={styles.popperBox}
+                  open={openPopper}
+                  anchorEl={popperAnchor.current}
+                  placement={'bottom'}
+                  keepMounted
+                >
+                  <Typography variant="h5">{t('recording')}</Typography>
+                </Popper>
 
-          <Stack
-            sx={styles.collectionTypographyStack}
-            spacing={1}
-            direction={'column'}
-            alignItems={'flex-start'}
-            justifyContent={'flex-end'}
-          >
-            <Typography variant="h1">{t('dataCollectionTitle')}</Typography>
-            <Typography fontFamily={'serif'} variant="h3">
-              {t('dataCollectionText1')}
-            </Typography>
-            <Typography fontFamily={'serif'} variant="h3">
-              {t('dataCollectionText2')}
-            </Typography>
-          </Stack>
-          <Box sx={{ width: '50%', height: '100%' }}>
-            <Box sx={styles.textRecordBox}>
-              <Typography align="left" variant="h2">
-                {textToRecordQuery.data ?? ''}
-              </Typography>
-            </Box>
-          </Box>
-        </Stack>
-        <IconButton size="large" onClick={handleSkipText}>
-          <SkipNextIcon />
-        </IconButton>
+                <Stack
+                  sx={styles.collectionTypographyStack}
+                  spacing={1}
+                  direction={'column'}
+                  alignItems={'flex-start'}
+                  justifyContent={'flex-end'}
+                >
+                  <Typography variant="h1">
+                    {t('dataCollectionTitle')}
+                  </Typography>
+                  <Typography fontFamily={'serif'} variant="h3">
+                    {t('dataCollectionText1')}
+                  </Typography>
+                  <Typography fontFamily={'serif'} variant="h3">
+                    {t('dataCollectionText2')}
+                  </Typography>
+                </Stack>
+                <Box sx={{ width: '50%', height: '100%' }}>
+                  <Box sx={styles.textRecordBox}>
+                    <Typography align="left" variant="h2">
+                      {infiniteTextQuery.data?.pages?.[0].text?.text ?? ''}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Stack>
+              <IconButton size="large" onClick={handleSkipText}>
+                <SkipNextIcon />
+              </IconButton>
+            </>
+          )}
       </Box>
       {/* SUPERVISOR INPUT DIALOG */}
       <Dialog fullWidth maxWidth="xl" open={displaySupervisorDialog}>
         <DialogContent>
           <TextField
             required
-            error={supervisorDataErrors.roomDimensions !== ''}
-            helperText={supervisorDataErrors.roomDimensions}
-            id="roomDimensions"
-            name="roomDimensions"
+            error={supervisorDataErrors.roomHeight !== ''}
+            helperText={supervisorDataErrors.roomHeight}
+            id="roomHeight"
+            name="roomHeight"
             margin="dense"
-            label={t('roomDimensions')}
+            label={t('roomDimH')}
             type="text"
             fullWidth
             variant="standard"
-            value={supervisorData.roomDimensions}
+            value={supervisorData.roomHeight}
             onChange={e =>
               handleSupervisorDataTextFieldChange(e, validDimensionsInput)
             }
           />
+          <TextField
+            required
+            error={supervisorDataErrors.roomWidth !== ''}
+            helperText={supervisorDataErrors.roomWidth}
+            id="roomWidth"
+            name="roomWidth"
+            margin="dense"
+            label={t('roomDimW')}
+            type="text"
+            fullWidth
+            variant="standard"
+            value={supervisorData.roomWidth}
+            onChange={e =>
+              handleSupervisorDataTextFieldChange(e, validDimensionsInput)
+            }
+          />
+          <TextField
+            required
+            error={supervisorDataErrors.roomLength !== ''}
+            helperText={supervisorDataErrors.roomLength}
+            id="roomLength"
+            name="roomLength"
+            margin="dense"
+            label={t('roomDimL')}
+            type="text"
+            fullWidth
+            variant="standard"
+            value={supervisorData.roomLength}
+            onChange={e =>
+              handleSupervisorDataTextFieldChange(e, validDimensionsInput)
+            }
+          />
+
           <TextField
             required
             error={supervisorDataErrors.recordingAddress !== ''}
@@ -470,9 +515,7 @@ function App() {
             size="medium"
             options={selectables.noiseTypes}
             getOptionLabel={option => option}
-            value={
-              supervisorData.noiseType !== '' ? supervisorData.noiseType : null
-            }
+            value={supervisorData.noiseType || null}
             renderInput={params => (
               <TextField
                 {...params}
@@ -545,21 +588,19 @@ function App() {
           </Typography>
         </Stack>
         <Typography variant="h2" textAlign={'center'}>
-          {t('legal')}
+          {t('recordingDialogTitle')}
         </Typography>
         <DialogContent>
-          <Typography variant="h5">
-            {t('dialogTextPart1')}{' '}
-            {
-              <Link
-                variant="h5"
-                component="button"
-                onClick={() => setDisplayLegalDialog(true)}
-              >
-                {t('applicableTerms')}
-              </Link>
-            }
-          </Typography>
+          <Stack direction={'row'} spacing={0.5}>
+            <Typography variant="h5">{t('dialogTextPart1')} </Typography>
+            <Link
+              variant="h5"
+              component="button"
+              onClick={() => setDisplayLegalDialog(true)}
+            >
+              {t('applicableTerms')}
+            </Link>
+          </Stack>
 
           <Typography variant="h5">{t('dialogTextPart2')}</Typography>
           <Typography variant="h5">{t('dialogTextPart3')}:</Typography>
@@ -663,13 +704,12 @@ function App() {
           />
 
           <Autocomplete
-            multiple
             id="nativeLanguage"
             size="medium"
             fullWidth
             options={languageOptions}
             getOptionLabel={lang => lang}
-            value={userData.nativeLanguage}
+            value={userData.nativeLanguage || null}
             renderInput={params => (
               <TextField
                 {...params}
@@ -755,11 +795,7 @@ function App() {
             fullWidth
             options={selectables.levelsOfEducation}
             getOptionLabel={option => option}
-            value={
-              userData.levelOfEducation !== ''
-                ? userData.levelOfEducation
-                : null
-            }
+            value={userData.levelOfEducation || null}
             renderInput={params => (
               <TextField
                 {...params}
@@ -781,7 +817,7 @@ function App() {
             fullWidth
             options={countryOptions}
             getOptionLabel={(country: string) => country}
-            value={userData.placeOfBirth !== '' ? userData.placeOfBirth : null}
+            value={userData.placeOfBirth || null}
             renderInput={params => (
               <TextField
                 {...params}

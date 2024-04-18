@@ -1,23 +1,6 @@
-import { TCountryCode, TLanguageCode } from 'countries-list'
-
 export interface TextRecordingKey {
   id: ''
   recording: Blob
-}
-
-export interface UserDataKey {
-  email: string
-  name: string
-  age: string
-  sex: string
-  dialect: string
-  nativeLanguage: TLanguageCode[]
-  spokenLanguages: TLanguageCode[]
-  postalCodeSchool: string
-  postalCodeAddress: string
-  levelOfEducation: string
-  placeOfBirth: TCountryCode | string
-  occupation: string
 }
 
 export interface UserInputData {
@@ -26,7 +9,7 @@ export interface UserInputData {
   age: string
   sex: string
   dialect: string
-  nativeLanguage: string[]
+  nativeLanguage: string
   spokenLanguages: string[]
   postalCodeSchool: string
   postalCodeAddress: string
@@ -54,14 +37,18 @@ export interface SupervisorInputData {
   noiseType: string
   recordingAddress: string
   backgroundNoise: string
-  roomDimensions: string //(højde,bredde,længde)
+  roomHeight: string
+  roomWidth: string
+  roomLength: string
 }
 
 export interface SupervisorInputDataErrors {
   noiseType: string
   recordingAddress: string
   backgroundNoise: string
-  roomDimensions: string //(højde,bredde,længde)
+  roomHeight: string
+  roomWidth: string
+  roomLength: string
 }
 
 export interface DialectOption {

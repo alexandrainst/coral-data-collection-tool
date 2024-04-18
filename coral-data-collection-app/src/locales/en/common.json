@@ -48,5 +48,12 @@
   "recording": "Recording",
   "clearUserInput": "Clear user input",
   "supervisorConfirm": "Confirm values",
-  "supervisorDataNeeded": "Lack of input from supervisor."
+  "supervisorDataNeeded": "Lack of input from supervisor.",
+  "recordingDialogTitle": "Speaker information",
+  "roomDimH": "The height of the recording room",
+  "roomDimW": "The width of the recording room",
+  "roomDimL": "The length of the recording room",
+  "roomHeightErrorText": "The recording room height must be a number.",
+  "roomWidthErrorText": "The recording room width must be a number.",
+  "roomLengthErrorText": "The recording room length must be a number."
 }

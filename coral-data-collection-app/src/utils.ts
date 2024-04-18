@@ -1,6 +1,11 @@
-import { SupervisorInputData, UserDataKey, UserInputData } from './types'
+import { SupervisorInputData, UserInputData } from './types'
 import selectables from './assets/selectables.json' assert { type: 'json' }
-import { TLanguageCode, getCountryCode } from 'countries-list'
+import languages from 'countries-list/minimal/languages.native.min.json'
+import countries from 'countries-list/minimal/countries.native.min.json'
+import { type RouterInputs } from './trpc'
+
+export const countryOptions = Object.values(countries)
+export const languageOptions = Object.values(languages)
 
 export const dimensionsRegex = new RegExp('^\\d{1,},\\d{1,},\\d{1,}$')
 export const dimensionsInputRegex = new RegExp('^(?:\\d{1,},){0,2}\\d*$')
@@ -28,7 +33,7 @@ export const generateEmptyUserData = (): UserInputData => ({
   age: '',
   sex: '',
   dialect: '',
-  nativeLanguage: [],
+  nativeLanguage: '',
   spokenLanguages: [],
   postalCodeSchool: '',
   postalCodeAddress: '',
@@ -41,23 +46,32 @@ export const generateEmptySupervisorData = (): SupervisorInputData => ({
   noiseType: '',
   recordingAddress: '',
   backgroundNoise: '',
-  roomDimensions: '',
+  roomHeight: '',
+  roomWidth: '',
+  roomLength: '',
 })
 
-export const userInputDataToDataKey = (data: UserInputData): UserDataKey => {
-  const countryCode = getCountryCode(data.placeOfBirth)
+export const userInputDataToServerType = (
+  data: UserInputData
+): RouterInputs['user'] => {
   return {
     email: data.email,
     name: data.name,
-    age: data.age,
+    age: Number(data.age),
     sex: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
     dialect: data.dialect,
-    nativeLanguage: data.nativeLanguage.map(l => l as TLanguageCode),
-    spokenLanguages: data.nativeLanguage.map(l => l as TLanguageCode),
-    postalCodeSchool: data.postalCodeSchool,
-    postalCodeAddress: data.postalCodeAddress,
+    nativeLanguage:
+      Object.entries(languages).find(e => e[1] === data.nativeLanguage)?.[0] ??
+      data.nativeLanguage,
+    spokenLanguages: data.spokenLanguages.map(
+      l => Object.entries(languages).find(e => e[1] === l)?.[0] ?? l
+    ),
+    postalCodeSchool: Number(data.postalCodeSchool),
+    postalCodeAddress: Number(data.postalCodeAddress),
     levelOfEducation: data.levelOfEducation,
-    placeOfBirth: countryCode === false ? data.placeOfBirth : countryCode,
+    placeOfBirth:
+      Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
+      data.placeOfBirth,
     occupation: data.occupation,
   }
 }

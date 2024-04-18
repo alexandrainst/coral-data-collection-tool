@@ -48,5 +48,12 @@
   "recording": "Optager",
   "clearUserInput": "Ryd bruger input",
   "supervisorConfirm": "Bekræft værdier",
-  "supervisorDataNeeded": "Mangler input fra tilsynsførende."
+  "supervisorDataNeeded": "Mangler input fra tilsynsførende.",
+  "recordingDialogTitle": "Indtaleroplysninger",
+  "roomDimH": "Optagelsesrummet højde",
+  "roomDimW": "Optagelsesrummet bredde",
+  "roomDimL": "Optagelsesrummet længde",
+  "roomHeightErrorText": "Optagelsesrummet højde skal være et tal",
+  "roomWidthErrorText": "Optagelsesrummet bredde skal være et tal",
+  "roomLengthErrorText": "Optagelsesrummet længde skal være et tal"
 }
