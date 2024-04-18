@@ -20,7 +20,7 @@ const queryClient = new QueryClient()
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: `${domainName}/trpc`,
+      url: `${domainName}/`,
       // You can pass any HTTP headers you wish here
     }),
   ],

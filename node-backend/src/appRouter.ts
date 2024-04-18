@@ -3,28 +3,8 @@ import { RecordingTestSchema, UserDataSchema } from '../types'
 import { z } from 'zod'
 
 export const appRouter = router({
-  infiniteTexts: publicProcedure
-    .input(
-      z.object({
-        cursor: z.number().nullish(), // <-- "cursor" needs to exist, but can be any type
-        direction: z.enum(['forward', 'backward']), // optional, useful for bi-directional query
-      })
-    )
-    .query(async opts => {
-      console.log('Recieved text query')
-      const { cursor } = opts.input
-
-      const text = {
-        text: Math.random().toString(36).substring(0, 11),
-        id: Math.random(),
-      }
-
-      return {
-        text,
-        cursor,
-      }
-    }),
   textToRecord: publicProcedure.query(() => {
+    console.log('Recieved single text query')
     return {
       text: Math.random().toString(36).substring(0, 11),
       id: Math.random(),

@@ -57,8 +57,6 @@ const validSupervisorDataKeys = new Set<string>(
 
 const recordingStopTimeMS = 1000
 
-let globalTextId = 0
-
 function App() {
   const { t } = useTranslation('common')
 
@@ -113,21 +111,35 @@ function App() {
 
   const popperAnchor = useRef<HTMLElement | null>(null)
   const [openPopper, setOpenPopper] = useState<boolean>(false)
-  // const [textId, setTextId] = useState<number>(globalTextId)
 
-  //const textToRecordQuery = trpc.textToRecord.useQuery()
-  const infiniteTextQuery = trpc.infiniteTexts.useInfiniteQuery(
-    {
-      limit: 1,
-    },
-    {
-      getNextPageParam: text => text.cursor,
-      // initialCursor: 1, // <-- optional you can pass an initialCursor
-    }
-  )
+  const textToRecordQuery = trpc.textToRecord.useQuery(undefined, {
+    enabled: !termsAccepted,
+  })
 
   const recordingMutation = trpc.recording.useMutation()
   const userDataMutation = trpc.user.useMutation()
+
+  useEffect(() => {
+    const setBlob = (e: IBlobEvent) => {
+      recordingMutation
+        .mutateAsync({
+          id: `${textToRecordQuery.data?.id ?? ''}`,
+        })
+        .catch(e => {
+          console.log(e)
+        })
+        .then(e => {
+          console.log(`POST recording response: ${e}`)
+        })
+      textToRecordQuery.refetch()
+    }
+
+    mediaRecorder.current?.addEventListener('dataavailable', setBlob)
+
+    return () => {
+      mediaRecorder.current?.removeEventListener('dataavailable', setBlob)
+    }
+  }, [mediaRecorder.current, textToRecordQuery.data])
 
   // Parse cached data and setup mediarecorder
   useEffect(() => {
@@ -142,22 +154,6 @@ function App() {
       setUserData(JSON.parse(cachedUserData))
     }
 
-    const setBlob = (e: IBlobEvent) => {
-      recordingMutation
-        .mutateAsync({
-          id: `${infiniteTextQuery.data?.pages?.[0].text?.id ?? ''}`,
-        })
-        .catch(e => {
-          console.log(e)
-        })
-        .then(e => {
-          console.log(`POST recording response: ${e}`)
-        })
-      globalTextId++
-      infiniteTextQuery.fetchNextPage()
-      //setTextId(globalTextId)
-    }
-
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
@@ -166,15 +162,10 @@ function App() {
         mediaRecorder.current = new MediaRecorder(audioStream, {
           mimeType: 'audio/wav',
         })
-        mediaRecorder.current.addEventListener('dataavailable', setBlob)
       })
       .catch(e => {
         console.error(`Unable to get audiostream: ${e}`)
       })
-
-    return () => {
-      mediaRecorder.current?.removeEventListener('dataavailable', setBlob)
-    }
   }, [])
 
   // Add eventlisteners to handle recording
@@ -305,6 +296,8 @@ function App() {
       invalidSupervisorData
     if (!invalidInput) {
       localStorage.setItem(userDataToken, JSON.stringify(userData))
+      const serverData = userInputDataToServerType(userData)
+      console.log(serverData)
       userDataMutation
         .mutateAsync(userInputDataToServerType(userData))
         .then(e => {
@@ -359,9 +352,7 @@ function App() {
   }
 
   const handleSkipText = () => {
-    globalTextId++
-    infiniteTextQuery.fetchNextPage()
-    //setTextId(globalTextId)
+    textToRecordQuery.refetch()
   }
 
   return (
@@ -413,12 +404,16 @@ function App() {
                 <Box sx={{ width: '50%', height: '100%' }}>
                   <Box sx={styles.textRecordBox}>
                     <Typography align="left" variant="h2">
-                      {infiniteTextQuery.data?.pages?.[0].text?.text ?? ''}
+                      {textToRecordQuery.data?.text ?? ''}
                     </Typography>
                   </Box>
                 </Box>
               </Stack>
-              <IconButton size="large" onClick={handleSkipText}>
+              <IconButton
+                sx={{ position: 'fixed', bottom: 0 }}
+                size="large"
+                onClick={handleSkipText}
+              >
                 <SkipNextIcon />
               </IconButton>
             </>

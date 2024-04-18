@@ -1,6 +1,9 @@
 #root {
   text-align: center;
   height: 100vh;
+  min-height: 720px;
+  min-width: 1280p;
+  background-color: white;
   display: flex;
   flex: 1;
 }

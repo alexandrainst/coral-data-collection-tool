@@ -9,8 +9,4 @@ console.log('Started server')
 createHTTPServer({
   middleware: cors(),
   router: appRouter,
-  createContext() {
-    console.log('Context')
-    return {}
-  },
 }).listen(process.env.PORT || 3000)

@@ -12,8 +12,4 @@ console.log('Started server');
 (0, standalone_1.createHTTPServer)({
     middleware: (0, cors_1.default)(),
     router: appRouter_1.appRouter,
-    createContext() {
-        console.log('Context');
-        return {};
-    },
 }).listen(process.env.PORT || 3000);

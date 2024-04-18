@@ -17,10 +17,10 @@ export const UserDataSchema = z.object({
     .string()
     .refine(langCode => LANGUAGE_CODES.some(code => code === langCode)),
   spokenLanguages: z
-    .array(z.string())
-    .refine(
-      arr =>
-        !arr.some(langCode => LANGUAGE_CODES.some(code => code === langCode))
+    .string()
+    .array()
+    .refine(arr =>
+      arr.every(langCode => LANGUAGE_CODES.some(code => code === langCode))
     ),
   postalCodeSchool: z.number(),
   postalCodeAddress: z.number(),
