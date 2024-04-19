@@ -1,6 +1,5 @@
 import { publicProcedure, router } from './trpc'
 import { RecordingTestSchema, UserDataSchema } from '../types'
-import { z } from 'zod'
 
 export const appRouter = router({
   textToRecord: publicProcedure.query(() => {
