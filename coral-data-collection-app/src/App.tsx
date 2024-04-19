@@ -47,8 +47,9 @@ const dialectOptions: DialectOption[] = Object.entries(
   entry[1].map(dialect => ({ group: entry[0], label: dialect }))
 )
 
-const userDataToken = 'userDataToken'
-const supervisorDataToken = 'supervisorDataToken'
+const USER_DATA_TOKEN = 'userDataToken'
+const SUPERVISOR_DATA_TOKEN = 'supervisorDataToken'
+const AUDIO_FORMAT = 'wav'
 
 const validUserDataKeys = new Set<string>(Object.keys(generateEmptyUserData()))
 const validSupervisorDataKeys = new Set<string>(
@@ -113,7 +114,8 @@ function App() {
   const [openPopper, setOpenPopper] = useState<boolean>(false)
 
   const textToRecordQuery = trpc.textToRecord.useQuery(undefined, {
-    enabled: !termsAccepted,
+    enabled:
+      displayUserDataDialog || displayLegalDialog || displayUserDataDialog,
   })
 
   const recordingMutation = trpc.recording.useMutation()
@@ -121,10 +123,15 @@ function App() {
 
   useEffect(() => {
     const setBlob = (e: IBlobEvent) => {
+      const formData = new FormData()
+      formData.append('format', AUDIO_FORMAT)
+      formData.append('id', `${textToRecordQuery.data?.id ?? ''}`)
+      formData.append(
+        'file',
+        new File([e.data], `${textToRecordQuery.data?.id ?? ''}`)
+      )
       recordingMutation
-        .mutateAsync({
-          id: `${textToRecordQuery.data?.id ?? ''}`,
-        })
+        .mutateAsync(formData)
         .catch(e => {
           console.log(e)
         })
@@ -143,8 +150,8 @@ function App() {
 
   // Parse cached data and setup mediarecorder
   useEffect(() => {
-    const cachedSupervisorData = localStorage.getItem(supervisorDataToken)
-    const cachedUserData = localStorage.getItem(userDataToken)
+    const cachedSupervisorData = localStorage.getItem(SUPERVISOR_DATA_TOKEN)
+    const cachedUserData = localStorage.getItem(USER_DATA_TOKEN)
 
     if (cachedSupervisorData !== null) {
       setSupervisorData(JSON.parse(cachedSupervisorData))
@@ -159,8 +166,11 @@ function App() {
         audio: true,
       })
       .then(audioStream => {
+        console.log(
+          `Samplingrate: ${audioStream.getAudioTracks()[0].getSettings().sampleRate}`
+        )
         mediaRecorder.current = new MediaRecorder(audioStream, {
-          mimeType: 'audio/wav',
+          mimeType: `audio/${AUDIO_FORMAT}`,
         })
       })
       .catch(e => {
@@ -244,7 +254,10 @@ function App() {
     setSupervisorDataErrors(errTextRecord)
     const invalidInput = Object.values(errTextRecord).some(v => v !== '')
     if (!invalidInput) {
-      localStorage.setItem(supervisorDataToken, JSON.stringify(supervisorData))
+      localStorage.setItem(
+        SUPERVISOR_DATA_TOKEN,
+        JSON.stringify(supervisorData)
+      )
     }
     setDisplaySupervisorDialog(invalidInput)
   }
@@ -295,7 +308,7 @@ function App() {
       Object.values(errTextRecord).some(v => v !== '') ||
       invalidSupervisorData
     if (!invalidInput) {
-      localStorage.setItem(userDataToken, JSON.stringify(userData))
+      localStorage.setItem(USER_DATA_TOKEN, JSON.stringify(userData))
       const serverData = userInputDataToServerType(userData)
       console.log(serverData)
       userDataMutation
@@ -346,7 +359,7 @@ function App() {
   }
 
   const handleClearUserData = () => {
-    localStorage.removeItem(userDataToken)
+    localStorage.removeItem(USER_DATA_TOKEN)
     setUserData(generateEmptyUserData())
     setDisplaySupervisorDialog(false)
   }

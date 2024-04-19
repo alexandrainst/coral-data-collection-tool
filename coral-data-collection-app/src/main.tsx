@@ -9,19 +9,28 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { theme } from './theme.ts'
 import { connect } from 'extendable-media-recorder-wav-encoder'
 import { register } from 'extendable-media-recorder'
-import { httpBatchLink } from '@trpc/client'
+import {
+  experimental_formDataLink,
+  httpBatchLink,
+  splitLink,
+} from '@trpc/client'
 import { trpc } from './trpc.ts'
 
 // Register wav extension for recordings
 await register(await connect())
 
-export const domainName = 'http://localhost:3333' //`${document.location.protocol}//${document.location.host}`
+export const url = 'http://localhost:3333' //`${document.location.protocol}//${document.location.host}`
 const queryClient = new QueryClient()
 const trpcClient = trpc.createClient({
   links: [
-    httpBatchLink({
-      url: `${domainName}/`,
-      // You can pass any HTTP headers you wish here
+    splitLink({
+      condition: op => op.input instanceof FormData,
+      true: experimental_formDataLink({
+        url,
+      }),
+      false: httpBatchLink({
+        url,
+      }),
     }),
   ],
 })
