@@ -1,11 +1,16 @@
 import * as z from 'zod'
+import { zfd } from 'zod-form-data'
 import languageNames from 'countries-list/minimal/languages.en.min.json'
 import countryNames from 'countries-list/minimal/countries.en.min.json'
 
-const ACCEPTED_AUDIO_TYPE = 'audio/wav'
-
 const COUNTRY_CODES = Object.keys(countryNames)
 const LANGUAGE_CODES = Object.keys(languageNames)
+
+export const RecordingSchema = zfd.formData({
+  id: zfd.text(),
+  file: zfd.file(),
+  format: zfd.text(),
+})
 
 export const UserDataSchema = z.object({
   email: z.string(),
@@ -35,16 +40,7 @@ export const TranscriptionSchema = z.object({
   id: z.string(),
   text: z.string(),
 })
-export const RecordingSchema = z.object({
-  id: z.string(),
-  recording: z.any().refine(file => file?.type === ACCEPTED_AUDIO_TYPE),
-})
-
-export const RecordingTestSchema = z.object({
-  id: z.string(),
-})
 
 export type UserData = z.infer<typeof UserDataSchema>
 export type Recording = z.infer<typeof RecordingSchema>
 export type Transcription = z.infer<typeof TranscriptionSchema>
-export type RecordingTest = z.infer<typeof RecordingTestSchema>
