@@ -1,5 +1,5 @@
 import { publicProcedure, router } from './trpc'
-import { RecordingSchema, UserDataSchema } from '../types'
+import { RecordingFormDataSchema, UserDataSchema } from '../types'
 
 import {
   experimental_createMemoryUploadHandler,
@@ -12,7 +12,7 @@ export const appRouter = router({
     console.log('Recieved single text query')
     opts.ctx.transcription.text = Math.random().toString(36).substring(0, 11)
     opts.ctx.transcription.id = Math.random() + ''
-
+    opts.ctx.unvalidatedTexts.add(opts.ctx.transcription.id)
     return opts.ctx.transcription
   }),
   recording: publicProcedure
@@ -26,9 +26,10 @@ export const appRouter = router({
         getRawInput: async () => formData,
       })
     })
-    .input(RecordingSchema)
+    .input(RecordingFormDataSchema)
     .mutation(async opts => {
-      console.log('Recieved recording')
+      console.log(`Recieved recording with user id: ${opts.input.userId}`)
+      opts.ctx.unvalidatedTexts.delete(opts.input.textId)
       return await writeRecordingToDisk(opts.input)
     }),
   user: publicProcedure.input(UserDataSchema).mutation(opts => {

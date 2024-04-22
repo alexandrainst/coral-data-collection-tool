@@ -55,5 +55,6 @@
   "roomDimL": "The length of the recording room",
   "roomHeightErrorText": "The recording room height must be a number.",
   "roomWidthErrorText": "The recording room width must be a number.",
-  "roomLengthErrorText": "The recording room length must be a number."
+  "roomLengthErrorText": "The recording room length must be a number.",
+  "serverResponseErr": "Unfortunately, something went wrong. Please try again later."
 }

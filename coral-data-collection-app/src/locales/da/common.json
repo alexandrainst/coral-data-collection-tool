@@ -55,5 +55,6 @@
   "roomDimL": "Optagelsesrummet længde",
   "roomHeightErrorText": "Optagelsesrummet højde skal være et tal",
   "roomWidthErrorText": "Optagelsesrummet bredde skal være et tal",
-  "roomLengthErrorText": "Optagelsesrummet længde skal være et tal"
+  "roomLengthErrorText": "Optagelsesrummet længde skal være et tal",
+  "serverResponseErr": "Der gik desværre noget galt. Prøv venligst igen senere."
 }

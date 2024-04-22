@@ -113,31 +113,58 @@ function App() {
   const popperAnchor = useRef<HTMLElement | null>(null)
   const [openPopper, setOpenPopper] = useState<boolean>(false)
 
+  const serverConnectionErr = useRef<boolean>(false)
+
+  const userId = useRef<string>('')
+
   const textToRecordQuery = trpc.textToRecord.useQuery(undefined, {
     enabled:
       displayUserDataDialog || displayLegalDialog || displayUserDataDialog,
+    throwOnError: e => {
+      if (!serverConnectionErr.current) {
+        console.log(`Text query response error!`)
+        console.log(e.shape)
+        alert(t('serverResponseErr'))
+        serverConnectionErr.current = true
+      }
+      return false
+    },
   })
 
-  const recordingMutation = trpc.recording.useMutation()
-  const userDataMutation = trpc.user.useMutation()
+  const recordingMutation = trpc.recording.useMutation({
+    onError: e => {
+      if (!serverConnectionErr.current) {
+        console.log(`Rercording mutation response error!`)
+        console.log(e.shape)
+        alert(t('serverResponseErr'))
+        serverConnectionErr.current = true
+      }
+      return false
+    },
+  })
+  const userDataMutation = trpc.user.useMutation({
+    onError: e => {
+      if (!serverConnectionErr.current) {
+        console.log(`User data mutation response error!`)
+        console.log(e.shape)
+        alert(t('serverResponseErr'))
+        serverConnectionErr.current = true
+      }
+      return false
+    },
+  })
 
   useEffect(() => {
     const setBlob = (e: IBlobEvent) => {
       const formData = new FormData()
       formData.append('format', AUDIO_FORMAT)
-      formData.append('id', `${textToRecordQuery.data?.id ?? ''}`)
+      formData.append('userId', userId.current)
+      formData.append('textId', `${textToRecordQuery.data?.id ?? ''}`)
       formData.append(
         'file',
         new File([e.data], `${textToRecordQuery.data?.id ?? ''}`)
       )
-      recordingMutation
-        .mutateAsync(formData)
-        .catch(e => {
-          console.log(e)
-        })
-        .then(e => {
-          console.log(`POST recording response: ${e}`)
-        })
+      recordingMutation.mutateAsync(formData)
       textToRecordQuery.refetch()
     }
 
@@ -190,8 +217,8 @@ function App() {
         try {
           mediaRecorder.current?.stop()
           mediaRecorder.current?.start()
-        } catch (error) {
-          console.error('Recording start error:', error)
+        } catch (e) {
+          console.error('Recording start error:', e)
         }
       }
     }
@@ -202,8 +229,8 @@ function App() {
         timerId = setTimeout(() => {
           try {
             mediaRecorder.current?.stop()
-          } catch (error) {
-            console.error('Recording stop error:', error)
+          } catch (e) {
+            console.error('Recording stop error:', e)
           }
         }, recordingStopTimeMS)
       }
@@ -309,13 +336,9 @@ function App() {
       invalidSupervisorData
     if (!invalidInput) {
       localStorage.setItem(USER_DATA_TOKEN, JSON.stringify(userData))
-      const serverData = userInputDataToServerType(userData)
-      console.log(serverData)
       userDataMutation
         .mutateAsync(userInputDataToServerType(userData))
-        .then(e => {
-          console.log(`POST user data response: ${e}`)
-        })
+        .then(e => (userId.current = e))
     }
     setDisplayUserDataDialog(invalidInput)
   }

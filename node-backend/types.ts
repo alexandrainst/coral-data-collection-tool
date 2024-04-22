@@ -6,12 +6,6 @@ import countryNames from 'countries-list/minimal/countries.en.min.json'
 const COUNTRY_CODES = Object.keys(countryNames)
 const LANGUAGE_CODES = Object.keys(languageNames)
 
-export const RecordingSchema = zfd.formData({
-  id: zfd.text(),
-  file: zfd.file(),
-  format: zfd.text(),
-})
-
 export const UserDataSchema = z.object({
   email: z.string(),
   name: z.string(),
@@ -35,6 +29,15 @@ export const UserDataSchema = z.object({
     .refine(countryCode => COUNTRY_CODES.some(code => code === countryCode)),
   occupation: z.string(),
 })
+
+export const RecordingSchema = z.object({
+  userId: z.string(),
+  textId: z.string(),
+  file: z.instanceof(File),
+  format: z.string(),
+})
+
+export const RecordingFormDataSchema = zfd.formData(RecordingSchema)
 
 export const TranscriptionSchema = z.object({
   id: z.string(),

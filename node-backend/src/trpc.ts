@@ -27,10 +27,12 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
     text: Math.random().toString(36).substring(0, 11),
     id: Math.random() + '',
   }
+  const unvalidatedTexts: Set<string> = new Set()
   return {
     req: opts.req,
     user,
     transcription,
+    unvalidatedTexts,
   }
 }
 

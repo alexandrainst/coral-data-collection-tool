@@ -12,7 +12,7 @@ export const writeRecordingToDisk = async (recording: Recording) => {
   const date = new Date()
   const fileDir = path.resolve(`${rootDir}/uploads/${date.toDateString()}`)
 
-  const recordingId = recording.id
+  const recordingId = recording.textId
 
   if (!fs.existsSync(fileDir)) {
     fs.mkdirSync(fileDir, { recursive: true })
