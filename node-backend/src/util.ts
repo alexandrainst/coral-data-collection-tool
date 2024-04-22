@@ -5,10 +5,9 @@ import { Recording } from '../types'
 
 // https://github.com/trpc/trpc/blob/main/examples/.experimental/next-formdata/src/utils/writeFileToDisk.ts
 export const writeRecordingToDisk = async (recording: Recording) => {
-  const rootDir = __dirname + '/..'
+  const rootDir = __dirname + '/../..'
 
-  const date = new Date()
-  const fileDir = path.resolve(`${rootDir}/uploads/${date.toDateString()}`)
+  const fileDir = path.resolve(`${rootDir}/${process.env.AUDIO_FOLDER_ENV || 'uploads'}}`)
 
   const recordingId = recording.textId
 

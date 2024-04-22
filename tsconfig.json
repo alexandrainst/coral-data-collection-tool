@@ -1,0 +1,11 @@
+{
+    "references": [
+      {
+        "path": "coral-data-collection-app"
+      },
+      {
+        "path": "node-backend"
+      }
+    ],
+    "exclude": ["node_modules", "dist", "*.d.ts"]
+  }

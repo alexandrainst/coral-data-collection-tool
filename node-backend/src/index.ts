@@ -18,4 +18,4 @@ const handler = createHTTPHandler({
 
 createServer((req, res) => {
   handler(req, res)
-}).listen(3333)
+}).listen(process.env.PORT_ENV || 3333)
