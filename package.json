@@ -1,0 +1,20 @@
+{
+    "name": "root",
+    "private": true,
+    "scripts": {
+        "build:client": "npm run build -w coral-data-collection-app",
+        "build:server": "npm run build -w node-backend",
+        "build": "run-s build:server build:client",
+        "dev:client": "npm run dev -w coral-data-collection-app",
+        "dev:server": "npm run dev -w node-backend",
+        "dev": "run-p dev:*"
+    },
+    "workspaces": [
+      "coral-data-collection-app",
+      "node-backend"
+    ],
+    "devDependencies": {
+        "npm-run-all": "^4.1.5",
+        "wait-port": "^1.0.1"
+    }
+  }
