@@ -7,8 +7,6 @@ import { Recording } from '../types'
 export const writeRecordingToDisk = async (recording: Recording) => {
   const rootDir = __dirname + '/..'
 
-  console.log(rootDir)
-
   const date = new Date()
   const fileDir = path.resolve(`${rootDir}/uploads/${date.toDateString()}`)
 
@@ -17,7 +15,6 @@ export const writeRecordingToDisk = async (recording: Recording) => {
   if (!fs.existsSync(fileDir)) {
     fs.mkdirSync(fileDir, { recursive: true })
   }
-  console.log('Writing', recordingId, 'to', fileDir)
 
   const fd = fs.createWriteStream(
     path.resolve(`${fileDir}/${recordingId}.${recording.format}`)
