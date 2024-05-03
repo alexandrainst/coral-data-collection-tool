@@ -14,7 +14,7 @@ The frontend is an React app that utilizes tRPC for communication with the backe
 
 
 ## Deployment
-Both the frontend and backend is distributed as docker containers.
+Both the frontend and backend are distributed as docker containers.
 To deploy an updated version simply go to the backend or frontend folder and run the following commands where **<...>** is replaced by either **frontend** or **backend**:
 
 1. npm run build
@@ -23,11 +23,11 @@ To deploy an updated version simply go to the backend or frontend folder and run
 
 3. docker push docker.alexandra.dk/coral-data-collection-\<...\>:latest (*Requires login to Alexandras docker server)
 
-4. *(Alternatively to 3.)* docker save docker.alexandra.dk/<...\>:latest > <...\>.tar 
+    - *(Alternatively to 3.)* docker save docker.alexandra.dk/<...\>:latest > <...\>.tar 
 
-5. *(Alternatively to 3.)* Move .tar file to target machine and run "docker load --input <...\>.tar"
+    - *(Alternatively to 3.)* Move .tar file to target machine and run "docker load --input <...\>.tar"
 
-6. On the target machine run "docker compose down" followed by "docker compose up -d"
+6. On the target machine run "docker compose down" followed by "docker-compose pull && docker-compose up -d" **OR** "docker-compose up -d" if the containers alternatively are loaded manually
 
 
 ### First time setup
