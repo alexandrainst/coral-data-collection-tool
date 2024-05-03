@@ -1,42 +1,128 @@
-import { publicProcedure, router } from './trpc'
-import { RecordingFormDataSchema, UserDataSchema } from '../types'
-
+import { TRPCError } from '@trpc/server'
+import { SqliteError } from 'better-sqlite3'
+import { performance } from 'node:perf_hooks'
+import { z } from 'zod'
 import {
-  experimental_createMemoryUploadHandler,
-  experimental_parseMultipartFormData,
-} from '@trpc/server/adapters/node-http/content-type/form-data'
-import { writeRecordingToDisk } from './util'
+  RecordingFormDataSchema,
+  Sentence,
+  SentenceSchema,
+  Speaker,
+  SpeakerSchema,
+} from '../types'
+import { formProcedure, publicProcedure, router } from './trpc'
+import { getId, log, saveRecodingFile } from './util'
 
 export const appRouter = router({
-  textToRecord: publicProcedure.query(opts => {
-    console.log('Recieved single text query')
-    opts.ctx.transcription.text = Math.random().toString(36).substring(0, 11)
-    opts.ctx.transcription.id = Math.random() + ''
-    opts.ctx.unvalidatedTexts.add(opts.ctx.transcription.id)
-    return opts.ctx.transcription
-  }),
-  recording: publicProcedure
-    .use(async opts => {
-      const formData = await experimental_parseMultipartFormData(
-        opts.ctx.req,
-        experimental_createMemoryUploadHandler()
-      )
+  user: publicProcedure
+    .input(SpeakerSchema)
+    .output(z.string())
+    .mutation(opts => {
+      const start = performance.now()
 
-      return opts.next({
-        getRawInput: async () => formData,
-      })
-    })
-    .input(RecordingFormDataSchema)
-    .mutation(async opts => {
-      console.log(`Recieved recording with user id: ${opts.input.userId}`)
-      opts.ctx.unvalidatedTexts.delete(opts.input.textId)
-      return await writeRecordingToDisk(opts.input)
+      const speaker = {
+        ...opts.input,
+        zip_school: opts.input.zip_school.toString(),
+        zip_childhood: opts.input.zip_childhood.toString(),
+        language_native: opts.input.language_native.toString(),
+        language_spoken: opts.input.language_spoken.toString(),
+        id_speaker: `spe_${getId(opts.input.email)}`,
+      }
+      try {
+        // TODO: Update user if already exists?
+        opts.ctx.db
+          .prepare(
+            `INSERT INTO speakers VALUES
+           (@id_speaker, @name, @email, @age, @gender, @dialect, @language_native, @language_spoken, @zip_school, @zip_childhood, @country_birth, @education, @occupation, NULL)`
+          )
+          .run(speaker)
+      } catch (e: unknown) {
+        log(
+          'Failed to create speaker:',
+          e instanceof SqliteError
+            ? {
+                speaker: speaker,
+                error: {
+                  name: e.name,
+                  code: e.code,
+                  message: e.message,
+                },
+              }
+            : e
+        )
+      }
+
+      const end = performance.now()
+      log(`[${(end - start).toFixed(2)}ms] Stored speaker:`, speaker)
+      return speaker.id_speaker
     }),
-  user: publicProcedure.input(UserDataSchema).mutation(opts => {
-    console.log('Recieved user query')
-    opts.ctx.user = opts.input
-    return opts.ctx.user.email
-  }),
+
+  textToRecord: publicProcedure
+    .input(z.undefined())
+    .output(SentenceSchema)
+    .query(opts => {
+      const start = performance.now()
+
+      const sentence = opts.ctx.db
+        .prepare('SELECT * FROM sentences ORDER BY random() LIMIT 1')
+        .get() as Sentence
+
+      const end = performance.now()
+      log(`[${(end - start).toFixed(2)}ms] Loaded sentence:`, sentence)
+      return sentence
+    }),
+
+  recording: formProcedure
+    .input(RecordingFormDataSchema)
+    .output(z.string())
+    .mutation(opts => {
+      const start = performance.now()
+      log('Got recording for:', {
+        id_speaker: opts.input.id_speaker,
+        id_sentence: opts.input.id_sentence,
+      })
+
+      const speaker = opts.ctx.db
+        .prepare('SELECT * FROM speakers WHERE id_speaker = ?')
+        .get(opts.input.id_speaker) as Speaker
+      if (!speaker) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const recording = {
+        ...opts.input,
+        id_recording: `rec_${getId(speaker.email + opts.input.datetime_end)}`,
+      }
+
+      try {
+        opts.ctx.db
+          .prepare(
+            `INSERT INTO recordings VALUES
+           (@id_recording, @id_sentence, @id_speaker, @location, @dim_room, @noise_level, @noise_type, @datetime_start, @datetime_end, NULL, NULL)`
+          )
+          .run(recording)
+      } catch (e: unknown) {
+        log(
+          'Failed to create recording:',
+          e instanceof SqliteError
+            ? {
+                recording: recording,
+                error: {
+                  name: e.name,
+                  code: e.code,
+                  message: e.message,
+                },
+              }
+            : e
+        )
+
+        throw e
+      }
+      saveRecodingFile(recording.id_recording, opts.input.ext, opts.input.file)
+
+      const end = performance.now()
+      log(`[${(end - start).toFixed(2)}ms] Saved recording:`, recording)
+      return recording.id_recording
+    }),
 })
 
 // Export type router type signature, this is used by the client.

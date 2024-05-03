@@ -1,54 +1,23 @@
 import { initTRPC } from '@trpc/server'
-import type * as trpcNext from '@trpc/server/adapters/next'
+import {
+  experimental_createMemoryUploadHandler,
+  experimental_parseMultipartFormData,
+} from '@trpc/server/adapters/node-http/content-type/form-data'
 import { ZodError } from 'zod'
-import { Transcription, UserData } from '../types'
-
-/**
- * Creates context for an incoming request
- * @link https://trpc.io/docs/v11/context
- */
-export async function createContext(opts: trpcNext.CreateNextContextOptions) {
-  const user: UserData = {
-    email: '',
-    name: '',
-    age: 0,
-    sex: '',
-    dialect: '',
-    nativeLanguage: '',
-    spokenLanguages: [],
-    postalCodeSchool: 0,
-    postalCodeAddress: 0,
-    levelOfEducation: '',
-    placeOfBirth: '',
-    occupation: '',
-  }
-
-  const transcription: Transcription = {
-    text: Math.random().toString(36).substring(0, 11),
-    id: Math.random() + '',
-  }
-  const unvalidatedTexts: Set<string> = new Set()
-  return {
-    req: opts.req,
-    user,
-    transcription,
-    unvalidatedTexts,
-  }
-}
-
-export type Context = Awaited<ReturnType<typeof createContext>>
+import { Context } from './context'
 
 const t = initTRPC.context<Context>().create({
   errorFormatter(opts) {
+    const { shape, error } = opts
+
     return {
-      ...opts.shape,
+      ...shape,
       data: {
+        ...shape.data,
         zodError:
-          opts.error.code === 'BAD_REQUEST' &&
-          opts.error.cause instanceof ZodError
-            ? opts.error.cause.flatten()
+          error.code === 'BAD_REQUEST' && error.cause instanceof ZodError
+            ? error.cause.flatten()
             : null,
-        ...opts.shape.data,
       },
     }
   },
@@ -60,3 +29,12 @@ const t = initTRPC.context<Context>().create({
  */
 export const router = t.router
 export const publicProcedure = t.procedure
+export const formProcedure = publicProcedure.use(opts =>
+  opts.next({
+    getRawInput: () =>
+      experimental_parseMultipartFormData(
+        opts.ctx.req,
+        experimental_createMemoryUploadHandler()
+      ),
+  })
+)

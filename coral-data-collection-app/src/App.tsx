@@ -1,44 +1,45 @@
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import './App.css'
-import {
-  Dialog,
-  DialogContent,
-  TextField,
-  DialogActions,
-  Button,
-  Link,
-  Typography,
-  Stack,
-  Autocomplete,
-  IconButton,
-  Box,
-  Checkbox,
-  Popper,
-} from '@mui/material'
-import {
-  basicValidText,
-  validEmail,
-  validPostalCode,
-  validDimensionsInput,
-  validNumber,
-  generateEmptyUserData,
-  generateEmptySupervisorData,
-  userInputDataToServerType,
-  languageOptions,
-  countryOptions,
-} from './utils'
-import { UserInputData, SupervisorInputData, DialectOption } from './types'
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle'
-import { styles } from './style'
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  IconButton,
+  Link,
+  Popper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import {
   IBlobEvent,
   IMediaRecorder,
   MediaRecorder,
 } from 'extendable-media-recorder'
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import './App.css'
+import { styles } from './style'
+import { DialectOption, SupervisorInputData, UserInputData } from './types'
+import {
+  basicValidText,
+  countryOptions,
+  generateEmptySupervisorData,
+  generateEmptyUserData,
+  languageOptions,
+  userInputDataToServerType,
+  validDimensionsInput,
+  validEmail,
+  validNumber,
+  validPostalCode,
+} from './utils'
 
-import selectables from './assets/selectables.json' assert { type: 'json' }
 import SkipNextIcon from '@mui/icons-material/SkipNext'
+import getBlobDuration from 'get-blob-duration'
+import selectables from './assets/selectables.json' assert { type: 'json' }
 import { trpc } from './trpc.ts'
 
 const dialectOptions: DialectOption[] = Object.entries(
@@ -115,7 +116,7 @@ function App() {
 
   const serverConnectionErr = useRef<boolean>(false)
 
-  const userId = useRef<string>('')
+  const id_speaker = useRef<string>('')
 
   const textToRecordQuery = trpc.textToRecord.useQuery(undefined, {
     enabled:
@@ -155,15 +156,35 @@ function App() {
   })
 
   useEffect(() => {
-    const setBlob = (e: IBlobEvent) => {
+    const setBlob = async (e: IBlobEvent) => {
+      const timestamp = Date.now()
+
       const formData = new FormData()
-      formData.append('format', AUDIO_FORMAT)
-      formData.append('userId', userId.current)
-      formData.append('textId', `${textToRecordQuery.data?.id ?? ''}`)
+      // TODO: ensure that the correct parameters are set the correct way
+      formData.append('id_sentence', textToRecordQuery.data?.id_sentence ?? '')
+      formData.append('id_speaker', id_speaker.current)
+      formData.append('location', supervisorData.recordingAddress)
       formData.append(
-        'file',
-        new File([e.data], `${textToRecordQuery.data?.id ?? ''}`)
+        'dim_room',
+        [
+          supervisorData.roomHeight,
+          supervisorData.roomWidth,
+          supervisorData.roomLength,
+        ].toString()
       )
+      formData.append('noise_level', supervisorData.backgroundNoise)
+      formData.append('noise_type', supervisorData.noiseType)
+      formData.append(
+        'datetime_start',
+        new Date(
+          timestamp - (await getBlobDuration(e.data)) * 1000
+        ).toISOString()
+      )
+      formData.append('datetime_end', new Date(timestamp).toISOString())
+
+      formData.append('file', new File([e.data], ''))
+      formData.append('ext', AUDIO_FORMAT)
+
       recordingMutation.mutateAsync(formData)
       textToRecordQuery.refetch()
     }
@@ -173,7 +194,12 @@ function App() {
     return () => {
       mediaRecorder.current?.removeEventListener('dataavailable', setBlob)
     }
-  }, [mediaRecorder.current, textToRecordQuery.data])
+  }, [
+    textToRecordQuery.data,
+    recordingMutation,
+    supervisorData,
+    textToRecordQuery,
+  ])
 
   // Parse cached data and setup mediarecorder
   useEffect(() => {
@@ -193,9 +219,6 @@ function App() {
         audio: true,
       })
       .then(audioStream => {
-        console.log(
-          `Samplingrate: ${audioStream.getAudioTracks()[0].getSettings().sampleRate}`
-        )
         mediaRecorder.current = new MediaRecorder(audioStream, {
           mimeType: `audio/${AUDIO_FORMAT}`,
         })
@@ -207,6 +230,7 @@ function App() {
 
   // Add eventlisteners to handle recording
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let timerId: any = 0
     let keyHold = false
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -245,7 +269,7 @@ function App() {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('keyup', handleKeyUp)
     }
-  }, [displayUserDataDialog, mediaRecorder.current])
+  }, [displayUserDataDialog])
 
   const supervisorDataToErrorText = useCallback(
     () =>
@@ -273,7 +297,7 @@ function App() {
           ? ''
           : t('roomLengthErrorText'),
       }) as Record<keyof SupervisorInputData, string>,
-    [supervisorData]
+    [supervisorData, t]
   )
 
   const handleSupervisorDataSubmit = () => {
@@ -338,7 +362,7 @@ function App() {
       localStorage.setItem(USER_DATA_TOKEN, JSON.stringify(userData))
       userDataMutation
         .mutateAsync(userInputDataToServerType(userData))
-        .then(e => (userId.current = e))
+        .then(e => (id_speaker.current = e))
     }
     setDisplayUserDataDialog(invalidInput)
   }
@@ -401,7 +425,6 @@ function App() {
               <Stack
                 sx={styles.collectionStack}
                 direction={'column'}
-                justifyContent={'center'}
                 alignItems={'center'}
                 spacing={5}
               >
@@ -422,10 +445,9 @@ function App() {
 
                 <Stack
                   sx={styles.collectionTypographyStack}
-                  spacing={1}
+                  spacing={0.5}
                   direction={'column'}
                   alignItems={'flex-start'}
-                  justifyContent={'flex-end'}
                 >
                   <Typography variant="h1">
                     {t('dataCollectionTitle')}

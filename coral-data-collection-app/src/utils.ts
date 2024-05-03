@@ -1,8 +1,8 @@
-import { SupervisorInputData, UserInputData } from './types'
-import selectables from './assets/selectables.json' assert { type: 'json' }
-import languages from 'countries-list/minimal/languages.native.min.json'
 import countries from 'countries-list/minimal/countries.native.min.json'
+import languages from 'countries-list/minimal/languages.native.min.json'
+import selectables from './assets/selectables.json' assert { type: 'json' }
 import { type RouterInputs } from './trpc'
+import { SupervisorInputData, UserInputData } from './types'
 
 export const countryOptions = Object.values(countries)
 export const languageOptions = Object.values(languages)
@@ -55,23 +55,23 @@ export const userInputDataToServerType = (
   data: UserInputData
 ): RouterInputs['user'] => {
   return {
-    email: data.email,
     name: data.name,
+    email: data.email,
     age: Number(data.age),
-    sex: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
+    gender: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
     dialect: data.dialect,
-    nativeLanguage:
+    language_native:
       Object.entries(languages).find(e => e[1] === data.nativeLanguage)?.[0] ??
       data.nativeLanguage,
-    spokenLanguages: data.spokenLanguages.map(
+    language_spoken: data.spokenLanguages.map(
       l => Object.entries(languages).find(e => e[1] === l)?.[0] ?? l
     ),
-    postalCodeSchool: Number(data.postalCodeSchool),
-    postalCodeAddress: Number(data.postalCodeAddress),
-    levelOfEducation: data.levelOfEducation,
-    placeOfBirth:
+    zip_school: Number(data.postalCodeSchool),
+    zip_childhood: Number(data.postalCodeAddress),
+    country_birth:
       Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
       data.placeOfBirth,
+    education: data.levelOfEducation,
     occupation: data.occupation,
   }
 }

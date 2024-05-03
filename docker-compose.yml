@@ -4,16 +4,14 @@ services:
     container_name: coral-data-collection-backend
     restart: unless-stopped
     volumes:
-      - ./audio_files:/audio_files
-      - ./db.sqlite3:/db.sqlite3
+      - ./data:${CORAL_DATA_DIR}
     ports:
-      - "3333:3333"
+      - "${CORAL_PORT}:${CORAL_PORT}"
     expose:
-      - 3333
+      - ${CORAL_PORT}
     environment:
-     - PORT_ENV=3333
-     - AUDIO_FOLDER_ENV=audio_files
-
+     - CORAL_PORT=${CORAL_PORT}
+     - CORAL_DATA_DIR=${CORAL_DATA_DIR}
 
   frontend:
     image: docker.alexandra.dk/coral-data-collection-app:latest

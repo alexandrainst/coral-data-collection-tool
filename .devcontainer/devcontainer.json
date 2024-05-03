@@ -3,7 +3,7 @@
 {
 	"name": "Node.js & TypeScript",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:20-bullseye",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -18,13 +18,14 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode",
-                "EditorConfig.EditorConfig",
-                "42Crunch.vscode-openapi",
-                "matthewpi.caddyfile-support",
-                "DavidAnson.vscode-markdownlint"
-            ],
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"EditorConfig.EditorConfig",
+				"42Crunch.vscode-openapi",
+				"matthewpi.caddyfile-support",
+				"DavidAnson.vscode-markdownlint",
+				"qwtel.sqlite-viewer"
+			],
             "settings": {
                 "[markdown]": {
                     "editor.renderWhitespace": "trailing"

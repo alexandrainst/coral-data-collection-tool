@@ -1,32 +1,50 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { Readable } from 'node:stream'
-import { Recording } from '../types'
+import int32ToUint32 from '@stdlib/number-int32-base-to-uint32'
+import adler32 from 'adler-32'
+import { existsSync, mkdirSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
+import { isAbsolute, join } from 'node:path'
 
-// https://github.com/trpc/trpc/blob/main/examples/.experimental/next-formdata/src/utils/writeFileToDisk.ts
-export const writeRecordingToDisk = async (recording: Recording) => {
-  const rootDir = __dirname + '/../..'
-
-  const fileDir = path.resolve(`${rootDir}/${process.env.AUDIO_FOLDER_ENV || 'uploads'}}`)
-
-  const recordingId = recording.textId
-
-  if (!fs.existsSync(fileDir)) {
-    fs.mkdirSync(fileDir, { recursive: true })
+export const ensureDataDir = (): string => {
+  const dataDir = process.env.CORAL_DATA_DIR
+  if (!dataDir) {
+    throw new Error('CORAL_DATA_DIR is not defined')
   }
 
-  const fd = fs.createWriteStream(
-    path.resolve(`${fileDir}/${recordingId}.${recording.format}`)
-  )
-
-  const fileStream = Readable.fromWeb(
-    // @ts-expect-error - unsure why this is not working
-    recording.file.stream()
-  )
-  for await (const chunk of fileStream) {
-    fd.write(chunk)
+  if (!isAbsolute(dataDir)) {
+    throw new Error('CORAL_DATA_DIR is not absolute')
   }
-  fd.end()
 
-  return recordingId
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true })
+  }
+
+  return dataDir
+}
+
+export const saveRecodingFile = (name: string, ext: string, file: File) => {
+  const start = performance.now()
+
+  const recordingsDir = join(ensureDataDir(), 'recordings')
+  if (!existsSync(recordingsDir)) {
+    mkdirSync(recordingsDir, { recursive: true })
+  }
+
+  const recordingPath = join(recordingsDir, `${name}.${ext}`)
+  file
+    .arrayBuffer()
+    .then(buffer => writeFile(recordingPath, Buffer.from(buffer)))
+    .then(() => {
+      const end = performance.now()
+      log(
+        `[${(end - start).toFixed(2)}ms] Finished writing file: ${name}.${ext}`
+      )
+    })
+}
+
+export const log = (message?: unknown, ...optionalParams: unknown[]): void => {
+  console.log(`[${new Date().toISOString()}]`, message, ...optionalParams)
+}
+
+export const getId = (str: string): string => {
+  return int32ToUint32(adler32.str(str)).toString()
 }

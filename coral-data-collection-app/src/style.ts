@@ -33,7 +33,6 @@ export const styles = createStyles({
     borderColor: colors.lightGrey,
     boxShadow: `5px 5px 5px ${colors.lightGrey}`,
     borderRadius: '8px',
-    width: '100%',
     height: 'fit-content',
     display: 'flex',
     alignItems: 'center',
