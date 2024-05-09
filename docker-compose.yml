@@ -14,8 +14,8 @@ services:
      - CORAL_DATA_DIR=${CORAL_DATA_DIR}
 
   frontend:
-    image: docker.alexandra.dk/coral-data-collection-app:latest
-    container_name: coral-data-collection-app
+    image: docker.alexandra.dk/coral-data-collection-frontend:latest
+    container_name: coral-data-collection-frontend
     restart: unless-stopped
     expose:
       - 3000

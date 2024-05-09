@@ -11,8 +11,13 @@ function createConn(dbPath: string): Database {
 
 function loadFixtures(dbPath: string) {
   if (!existsSync(dbPath)) {
-    log('Loading fixture DB')
-    copyFileSync(resolve(__dirname, '..', 'fixtures/sentences.sqlite'), dbPath)
+    const path =
+      process.env.NODE_ENV === 'production'
+        ? process.env.CORAL_DATA_DIR ?? '/'
+        : `${__dirname}/..`
+
+    console.log(path)
+    copyFileSync(resolve(path, 'fixtures/sentences.sqlite'), dbPath)
   }
 
   log('Ensuring fixture tables exist')

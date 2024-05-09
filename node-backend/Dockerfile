@@ -8,4 +8,4 @@ RUN apt update; apt install sqlite3
 
 COPY dist/ dist/
 
-CMD [ "node", "dist/src/index.js" ]
+CMD [ "NODE_ENV=production node", "dist/src/index.js" ]
