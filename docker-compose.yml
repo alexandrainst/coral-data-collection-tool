@@ -4,7 +4,7 @@ services:
     container_name: coral-data-collection-backend
     restart: unless-stopped
     volumes:
-      - ./data:${CORAL_DATA_DIR}
+      - ./path/relative/to/docker-compose.yml:${CORAL_DATA_DIR}
     ports:
       - "${CORAL_PORT}:${CORAL_PORT}"
     expose:

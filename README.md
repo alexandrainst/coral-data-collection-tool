@@ -12,8 +12,10 @@ Otherwise the tRPC server side implementation follows this guide: <https://trpc.
 
 The frontend is an React app that utilizes tRPC for communication with the backend. The tRPC implementation follows this guide: <https://trpc.io/docs/client/react> and this implementation example: <https://github.com/trpc/trpc/tree/next/examples/minimal-react>.
 
-
 ## Deployment
+
+### Build and update containers
+
 Both the frontend and backend are distributed as docker containers.
 To deploy an updated version simply go to the backend or frontend folder and run the following commands where **<...>** is replaced by either **frontend** or **backend**:
 
@@ -21,21 +23,36 @@ To deploy an updated version simply go to the backend or frontend folder and run
 
 2. docker build -t docker.alexandra.dk/coral-data-collection-\<...\>:latest .
 
-3. docker push docker.alexandra.dk/coral-data-collection-\<...\>:latest (*Requires login to Alexandras docker server)
+3. **(Requires login to Alexandras docker server)** docker push docker.alexandra.dk/coral-data-collection-\<...\>:latest
 
-    - *(Alternatively to 3.)* docker save docker.alexandra.dk/coral-data-collection-\<...\>:latest > <...\>.tar 
+    - *(Alternatively)* docker save docker.alexandra.dk/coral-data-collection-\<...\>:latest > <...\>.tar
 
-    - *(Alternatively to 3.)* Move .tar file to target machine and run "docker load --input <...\>.tar"
+### Deploy update on target machine
 
-6. On the target machine run "docker compose down" followed by "docker-compose pull && docker-compose up -d" **OR** "docker-compose up -d" if the containers alternatively are loaded manually
+#### **With** login to Alexandras docker server
+
+run "docker compose down" followed by "docker-compose pull && docker-compose up -d"
+
+#### **Without** login to Alexandras docker server
+
+1. move .tar file to target machine and run "docker load --input <...\>.tar" *(see build and update step above)*
+
+2. run "docker compose down" followed by "docker-compose up -d"
 
 
-### First time setup
+## First time setup
+
 Both the frontend and backend are part of a docker compose setup defined in the file *docker-compose.yml*. Thus, the target machine needs to have [docker compose installed](https://docs.docker.com/compose/install/) and preferrably set to start on boot.
 
-Assuming that the docker containers are available on Alexandras docker server then the target machine only needs the docker-compose.yml and .env file. Otherwise the .tar files are also required (see the above deployment steps).
+Assuming that the docker containers are available on Alexandras docker server then the target machine needs the following:
 
-For the first time setup the data folder (containing the DB and recordings folder) needs to be mapped into the backend container. This is done by changing *./path/relative/to/docker-compose.yml* in the following section of the docker-compose.yml file:
+- docker-compose.yml file.
+- .env file.
+- login to Alexandras docker server
+
+If there is no login or the containers are not avaliable then the .tar files are also required (see the  alternative deployment steps above).
+
+For the first time setup the data folder (containing the DB) needs to be mapped into the backend container. This is done by changing *./path/relative/to/docker-compose.yml* in the following section of the docker-compose.yml file:
 
     volumes:
        - ./path/relative/to/docker-compose.yml:${CORAL_DATA_DIR}
