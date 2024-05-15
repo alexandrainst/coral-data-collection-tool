@@ -5,7 +5,11 @@ import { writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
 
 export const ensureDataDir = (): string => {
-  const dataDir = process.env.CORAL_DATA_DIR
+  const dataDir =
+    process.env.NODE_ENV === 'production'
+      ? process.env.CORAL_DATA_DIR ?? '/'
+      : `${__dirname}/..`
+  log(dataDir)
   if (!dataDir) {
     throw new Error('CORAL_DATA_DIR is not defined')
   }

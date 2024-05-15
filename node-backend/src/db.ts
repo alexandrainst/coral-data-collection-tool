@@ -9,22 +9,26 @@ function createConn(dbPath: string): Database {
   return conn
 }
 
-function loadFixtures(dbPath: string) {
-  if (!existsSync(dbPath)) {
-    const path =
-      process.env.NODE_ENV === 'production'
-        ? process.env.CORAL_DATA_DIR ?? '/'
-        : `${__dirname}/..`
-
-    console.log(path)
-    copyFileSync(resolve(path, 'fixtures/sentences.sqlite'), dbPath)
+let dbPath: string
+let dbConn: Database
+export function getDB(): Database {
+  if (!dbPath) {
+    log('Ensuring DB PATH')
+    const dataPath = ensureDataDir()
+    dbPath = join(dataPath, 'db.sqlite')
+    if (!existsSync(dbPath)) {
+      log('Creating DB from fixtures')
+      copyFileSync(resolve(dataPath, 'fixtures/sentences.sqlite'), dbPath)
+    }
   }
 
-  log('Ensuring fixture tables exist')
-  const conn = createConn(dbPath)
-  conn
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS "speakers" (
+  if (!dbConn) {
+    log('Creating connection')
+    dbConn = createConn(dbPath)
+    log('Ensuring fixture tables exist')
+    dbConn
+      .prepare(
+        `CREATE TABLE IF NOT EXISTS "speakers" (
         "id_speaker"	    text,
         "name"            text NOT NULL,
         "email"           text NOT NULL,
@@ -41,11 +45,11 @@ function loadFixtures(dbPath: string) {
         "split"	          text,
         PRIMARY KEY ("id_speaker")
       )`
-    )
-    .run()
-  conn
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS "recordings" (
+      )
+      .run()
+    dbConn
+      .prepare(
+        `CREATE TABLE IF NOT EXISTS "recordings" (
         "id_recording"	  text,
         "id_sentence"	    text NOT NULL,
         "id_speaker"	    text NOT NULL,
@@ -61,22 +65,8 @@ function loadFixtures(dbPath: string) {
         FOREIGN KEY ("id_speaker") REFERENCES "speakers" ("id_speaker"),
         PRIMARY KEY ("id_recording")
       )`
-    )
-    .run()
-  conn.close()
-}
-
-let dbPath: string
-let dbConn: Database
-export function getDB(): Database {
-  if (!dbPath) {
-    dbPath = join(ensureDataDir(), 'db.sqlite')
-    loadFixtures(dbPath)
-  }
-
-  if (!dbConn) {
-    log('Creating connection')
-    dbConn = createConn(dbPath)
+      )
+      .run()
     process.on('exit', () => dbConn.close())
   }
 

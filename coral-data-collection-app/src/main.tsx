@@ -15,6 +15,10 @@ import {
   splitLink,
 } from '@trpc/client'
 import { trpc } from './trpc.ts'
+import '@fontsource/roboto/300.css'
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
 
 // Register wav extension for recordings
 await register(await connect())

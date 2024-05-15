@@ -7,11 +7,16 @@ export const styles = createStyles({
     backgroundColor: colors.white,
   },
   collectionStack: {
+    width: '60%',
+    height: 'fit-content',
+    paddingTop: '15px',
+  },
+  mainStack: {
+    height: '100%',
     width: '100%',
-    height: '95%',
   },
   collectionTypographyStack: {
-    width: '50%',
+    width: '100%',
     minHeight: 'fit-content',
   },
   termsCheckBox: {
@@ -19,14 +24,11 @@ export const styles = createStyles({
       color: colors.green,
     },
   },
-  popperBox: {
+  recordingPopup: {
+    color: colors.white,
+    width: '100%',
+    height: '50%',
     backgroundColor: colors.green,
-    borderRadius: '100px',
-    width: '10%',
-    height: '10%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   textRecordBox: {
     border: 2,
@@ -34,8 +36,7 @@ export const styles = createStyles({
     boxShadow: `5px 5px 5px ${colors.lightGrey}`,
     borderRadius: '8px',
     height: 'fit-content',
-    display: 'flex',
-    alignItems: 'center',
+    width: '100%',
     padding: '20px',
   },
   contentStack: {

@@ -1,11 +1,13 @@
-import countries from 'countries-list/minimal/countries.native.min.json'
-import languages from 'countries-list/minimal/languages.native.min.json'
 import selectables from './assets/selectables.json' assert { type: 'json' }
 import { type RouterInputs } from './trpc'
 import { SupervisorInputData, UserInputData } from './types'
 
-export const countryOptions = Object.values(countries)
-export const languageOptions = Object.values(languages)
+export const countryOptions = Object.values(selectables.countries).sort(
+  (a, b) => a.localeCompare(b, 'da', { sensitivity: 'accent' })
+)
+export const languageOptions = Object.values(selectables.languages).sort(
+  (a, b) => a.localeCompare(b, 'da', { sensitivity: 'accent' })
+)
 
 export const dimensionsRegex = new RegExp('^\\d{1,},\\d{1,},\\d{1,}$')
 export const dimensionsInputRegex = new RegExp('^(?:\\d{1,},){0,2}\\d*$')
@@ -54,6 +56,7 @@ export const generateEmptySupervisorData = (): SupervisorInputData => ({
 export const userInputDataToServerType = (
   data: UserInputData
 ): RouterInputs['user'] => {
+  const languages = Object.entries(selectables.languages)
   return {
     name: data.name,
     email: data.email,
@@ -61,16 +64,17 @@ export const userInputDataToServerType = (
     gender: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
     dialect: data.dialect,
     language_native:
-      Object.entries(languages).find(e => e[1] === data.nativeLanguage)?.[0] ??
+      languages.find(e => e[1] === data.nativeLanguage)?.[0] ??
       data.nativeLanguage,
     language_spoken: data.spokenLanguages.map(
-      l => Object.entries(languages).find(e => e[1] === l)?.[0] ?? l
+      l => languages.find(e => e[1] === l)?.[0] ?? l
     ),
     zip_school: Number(data.postalCodeSchool),
     zip_childhood: Number(data.postalCodeAddress),
     country_birth:
-      Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
-      data.placeOfBirth,
+      Object.entries(selectables.countries).find(
+        c => c[1] === data.placeOfBirth
+      )?.[0] ?? data.placeOfBirth,
     education: data.levelOfEducation,
     occupation: data.occupation,
   }

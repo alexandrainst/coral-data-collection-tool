@@ -9,7 +9,6 @@ import {
   DialogContent,
   IconButton,
   Link,
-  Popper,
   Stack,
   TextField,
   Typography,
@@ -41,6 +40,7 @@ import SkipNextIcon from '@mui/icons-material/SkipNext'
 import getBlobDuration from 'get-blob-duration'
 import selectables from './assets/selectables.json' assert { type: 'json' }
 import { trpc } from './trpc.ts'
+import { TermsComponent } from './termsComponent.tsx'
 
 const dialectOptions: DialectOption[] = Object.entries(
   selectables.dialects
@@ -57,7 +57,7 @@ const validSupervisorDataKeys = new Set<string>(
   Object.keys(generateEmptySupervisorData())
 )
 
-const recordingStopTimeMS = 1000
+const REC_STOP_MS = 1000
 
 function App() {
   const { t } = useTranslation('common')
@@ -111,8 +111,7 @@ function App() {
     setDisplayInvalidSupervisorDataText,
   ] = useState<boolean>(false)
 
-  const popperAnchor = useRef<HTMLElement | null>(null)
-  const [openPopper, setOpenPopper] = useState<boolean>(false)
+  const [isRecording, setIsRecording] = useState<boolean>(false)
 
   const serverConnectionErr = useRef<boolean>(false)
 
@@ -234,10 +233,10 @@ function App() {
     let timerId: any = 0
     let keyHold = false
     const handleKeyDown = async (e: KeyboardEvent) => {
-      if (e.key === 'r' && !keyHold) {
+      if ((e.key === ' ' || e.key === 'Spacebar') && !keyHold) {
         clearTimeout(timerId)
         keyHold = true
-        setOpenPopper(keyHold)
+        setIsRecording(keyHold)
         try {
           mediaRecorder.current?.stop()
           mediaRecorder.current?.start()
@@ -247,16 +246,16 @@ function App() {
       }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'r' && keyHold) {
+      if ((e.key === ' ' || e.key === 'Spacebar') && keyHold) {
         keyHold = false
-        setOpenPopper(keyHold)
+        setIsRecording(keyHold)
         timerId = setTimeout(() => {
           try {
             mediaRecorder.current?.stop()
           } catch (e) {
             console.error('Recording stop error:', e)
           }
-        }, recordingStopTimeMS)
+        }, REC_STOP_MS)
       }
     }
     if (!displayUserDataDialog) {
@@ -423,57 +422,62 @@ function App() {
           !displayUserDataDialog && (
             <>
               <Stack
-                sx={styles.collectionStack}
+                sx={styles.mainStack}
                 direction={'column'}
                 alignItems={'center'}
-                spacing={5}
+                justifyContent={'space-between'}
+                spacing={2}
               >
-                <span
-                  style={{ marginTop: '10px', height: '0%', width: '0%' }}
-                  id="popperAnchor"
-                  ref={popperAnchor}
-                />
-                <Popper
-                  sx={styles.popperBox}
-                  open={openPopper}
-                  anchorEl={popperAnchor.current}
-                  placement={'bottom'}
-                  keepMounted
-                >
-                  <Typography variant="h5">{t('recording')}</Typography>
-                </Popper>
-
                 <Stack
-                  sx={styles.collectionTypographyStack}
-                  spacing={0.5}
+                  sx={styles.collectionStack}
                   direction={'column'}
-                  alignItems={'flex-start'}
+                  alignItems={'center'}
+                  spacing={5}
                 >
-                  <Typography variant="h1">
-                    {t('dataCollectionTitle')}
-                  </Typography>
-                  <Typography fontFamily={'serif'} variant="h3">
-                    {t('dataCollectionText1')}
-                  </Typography>
-                  <Typography fontFamily={'serif'} variant="h3">
-                    {t('dataCollectionText2')}
+                  <Stack
+                    sx={styles.collectionTypographyStack}
+                    spacing={0.5}
+                    direction={'column'}
+                    alignItems={'flex-start'}
+                  >
+                    <Typography variant="h2">
+                      {t('dataCollectionTitle')}
+                    </Typography>
+                    <Typography variant="h5">
+                      {t('dataCollectionText1')}
+                    </Typography>
+                    <Typography variant="h5">
+                      {t('dataCollectionText2')}
+                    </Typography>
+                  </Stack>
+
+                  <Typography
+                    fontFamily={'serif'}
+                    sx={styles.textRecordBox}
+                    align="left"
+                    variant="h4"
+                  >
+                    {textToRecordQuery.data?.text ?? ''}
                   </Typography>
                 </Stack>
-                <Box sx={{ width: '50%', height: '100%' }}>
-                  <Box sx={styles.textRecordBox}>
-                    <Typography align="left" variant="h2">
-                      {textToRecordQuery.data?.text ?? ''}
-                    </Typography>
-                  </Box>
-                </Box>
+                {isRecording ? (
+                  <Typography
+                    sx={styles.recordingPopup}
+                    alignContent={'center'}
+                    variant="h1"
+                  >
+                    {t('recording')}
+                  </Typography>
+                ) : (
+                  <IconButton
+                    sx={{ position: 'fixed', bottom: 0 }}
+                    size="large"
+                    onClick={handleSkipText}
+                  >
+                    <SkipNextIcon />
+                  </IconButton>
+                )}
               </Stack>
-              <IconButton
-                sx={{ position: 'fixed', bottom: 0 }}
-                size="large"
-                onClick={handleSkipText}
-              >
-                <SkipNextIcon />
-              </IconButton>
             </>
           )}
       </Box>
@@ -634,20 +638,20 @@ function App() {
           </IconButton>
           <Typography
             visibility={displayInvalidSupervisorDataText ? 'visible' : 'hidden'}
-            variant="h6"
+            variant="body2"
             color={'error'}
           >
             {t('supervisorDataNeeded')}
           </Typography>
         </Stack>
-        <Typography variant="h2" textAlign={'center'}>
+        <Typography variant="h4" textAlign={'center'}>
           {t('recordingDialogTitle')}
         </Typography>
         <DialogContent>
           <Stack direction={'row'} spacing={0.5}>
-            <Typography variant="h5">{t('dialogTextPart1')} </Typography>
+            <Typography variant="h6">{t('dialogTextPart1')} </Typography>
             <Link
-              variant="h5"
+              variant="h6"
               component="button"
               onClick={() => setDisplayLegalDialog(true)}
             >
@@ -655,8 +659,8 @@ function App() {
             </Link>
           </Stack>
 
-          <Typography variant="h5">{t('dialogTextPart2')}</Typography>
-          <Typography variant="h5">{t('dialogTextPart3')}:</Typography>
+          <Typography variant="h6">{t('dialogTextPart2')}</Typography>
+          <Typography variant="h6">{t('dialogTextPart3')}:</Typography>
           <TextField
             required
             error={userDataErrors.email !== ''}
@@ -914,7 +918,7 @@ function App() {
                   color={'inherit'}
                   id="termsAccepted1"
                   name="termsAccepted1"
-                  variant="h5"
+                  variant="body1"
                   underline={'none'}
                   component="button"
                   onClick={() => setTermsAccepted(!termsAccepted)}
@@ -924,7 +928,7 @@ function App() {
                 <Link
                   id="termsAccepted2"
                   name="termsAccepted2"
-                  variant="h5"
+                  variant="body1"
                   component="button"
                   onClick={() => setDisplayLegalDialog(true)}
                 >
@@ -935,7 +939,7 @@ function App() {
             <Typography
               sx={{ marginLeft: '10px' }}
               visibility={displayTermsAcceptedErrorText ? 'visible' : 'hidden'}
-              variant="h6"
+              variant="body2"
               color={'error'}
             >
               {t('termsAcceptedErrorText')}
@@ -956,142 +960,11 @@ function App() {
         open={displayLegalDialog}
         onClose={() => setDisplayLegalDialog(false)}
       >
-        <Typography textAlign={'center'} variant="h1">
+        <Typography textAlign={'center'} variant="h4">
           Gældende vilkår for CoRal dataindsamlingen.
         </Typography>
         <DialogContent>
-          <section style={{ margin: '5px' }}>
-            <p>
-              <b>Effektiv fra d. 15. april 2023</b>
-            </p>
-            <p>
-              Alexandra Instituttet er sammen med Københavns Universitet,
-              Digitaliseringsstyrelsen og virksomhederne Corti og Alvenir i gang
-              med et projekt, hvor visionen er at skabe grundlag for, at dansk
-              sprogteknologi (kunstig intelligens) kan komme op blandt de
-              førende lande i Europa inden for taleteknologi. Projektet hedder
-              “Danish Conversational and Read-aloud Speech Dataset” og forkortes
-              “CoRal”. Målet er at producere 1000–1500 timers taledata fordelt
-              på to taletyper: samtale og oplæsning, der indeholder en bred
-              repræ-sentation af danske dialekter og talestile.
-            </p>
-            <p>
-              Du må kun deltage i CoRal dataindsamlingen, hvis du accepterer
-              følgende vilkår.
-            </p>
-            <h3>
-              <b>Støtteberettigelse</b>
-            </h3>
-            <p>
-              CoRal dataindsamlingen er åben for alle over 18 år. Hvis du er 18
-              eller under, skal du have din forælder eller værgeres samtykke for
-              at deltage i dataindsamlingen.
-            </p>
-            <h3>
-              <b>Dine bidrag</b>
-            </h3>
-            Vi gør CoRal-databasen tilgængelig under Creative Commons CC0 public
-            domain dedication{' '}
-            <a href="https://creativecommons.org/licenses/by/2.5/dk/legalcode">
-              (https://creativecommons.org/licenses/by/2.5/dk/legalcode)
-            </a>
-            . Det betyder, at dataet i databasen er offentligt, og vi giver
-            afkald på alle ophavsrettigheder i det omfang, vi kan i henhold til
-            loven. Hvis du deltager i CoRal dataindsamlingen, kræver vi, at du
-            gør det samme. Du skal acceptere, at CoRal kan tilbyde alle dine
-            bidrag (herunder tekst og optagelser) til offentligheden under CC0's
-            offentlige domæne dedikation. For at kunne deltage i CoRal
-            dataindsamlingen kræver vi også, at du stiller 2 garantier:
-            <ul>
-              <li>
-                {' '}
-                For det første, at dine bidrag er helt din egen skabelse.{' '}
-              </li>
-              <li>
-                {' '}
-                For det andet, at dine bidrag ikke krænker tredjeparts
-                rettigheder.{' '}
-              </li>
-            </ul>
-            Hvis du ikke kan stille disse garantier, kan du ikke deltage i CoRal
-            dataindsamlingen
-            <h3>
-              <b>Ansvarsfraskrivelser</b>
-            </h3>
-            <p>
-              Ved at deltage i CoRal indsamlingen accepterer du, at CoRal på
-              ingen måde hæfter for nogen form for manglende evne til at bruge
-              stemmeoptagelser eller for ethvert krav som følge af disse vilkår.
-              CoRal fralægger specifikt følgende ansvar: Indirekte, særlige,
-              tilfældige, følgeskader eller eksemplariske skader, direkte eller
-              indirekte, skader for tab af goodwill, arbejdsophør, tabt
-              fortjeneste, tab af data eller skader ved computerfejl. Du
-              accepterer at CoRal er fri for ethvert ansvar eller krav, der
-              følger af din deltagelse i CoRal dataindsamlingen. CoRal leverer
-              tjenesten "as is" og fralægger specifikt eventuelle juridiske
-              garantier eller garantier som (men ikke begrænset til)
-              "salgbarhed", "egnethed til et bestemt formål", "ikke-krænkelse"
-              og garantier som følge af handel, brug eller handel.
-            </p>
-            <h3>
-              <b>Opdateringer af vilkår</b>
-            </h3>
-            <p>
-              CoRal kan beslutte at opdatere disse vilkår løbende. De opdaterede
-              vilkår vil blive offentliggjort online her på siden. Hvis du
-              fortsætter med at bruge stemmeoptagelserne i databasen efter at vi
-              har indsendt opdaterede vilkår, accepterer du at acceptere, at du
-              accepterer sådanne ændringer. Den effektive dato øverst på denne
-              side er tilgængelig for at gøre det klart hvornår vi lavede den
-              seneste opdatering.
-            </p>
-            <h3>
-              <b>Gældende lovgivning</b>
-            </h3>
-            <p>
-              Dansk lov finder anvendelse på disse vilkår. Disse vilkår er hele
-              aftalen mellem dig og CoRal i forbindelse med CoRal
-              dataindsamlingen.
-            </p>
-            <h3>
-              <b>Note vdr. håndtering af dit data</b>
-            </h3>
-            <p>
-              Når CoRal (det er os) modtager information fra dig, gemmer vi dem
-              på en server hosted af digital ocean.
-            </p>
-            <p>
-              <h3>
-                <b>Stemmeoptagelser</b>
-              </h3>
-              Stemmeoptagelser kan være tilgængelige i CoRal-databasen til
-              offentligt forbrug og brug under en Creative Commons Zero License{' '}
-              <a href="https://creativecommons.org/licenses/by/2.5/dk/legalcode">
-                (https://creativecommons.org/licenses/by/2.5/dk/legalcode)
-              </a>
-              .
-            </p>
-            <h3>
-              <b>Kontakt</b>
-            </h3>
-            <p>
-              Er du interesseret i at høre mere om projektet? Eller har du
-              spørgsmål til indsamlingen af data? Så kan du kontakte os på en af
-              følgende emails.
-            </p>
-            <p>
-              <i>Anders Jess Pedersen</i>{' '}
-              <a href="mailto: anders.j.pedersen@alexandra.dk">
-                anders.j.pedersen@alexandra.dk
-              </a>
-            </p>
-            <p>
-              <i>Dan Saatrup Nielsen</i>{' '}
-              <a href="mailto: dan.nielsen@alexandra.dk">
-                dan.nielsen@alexandra.dk
-              </a>
-            </p>
-          </section>
+          <TermsComponent />
         </DialogContent>
         <Stack marginBottom={'5px'} alignItems={'center'}>
           <Button
