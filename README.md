@@ -23,7 +23,7 @@ To deploy an updated version simply go to the backend or frontend folder and run
 
 3. docker push docker.alexandra.dk/coral-data-collection-\<...\>:latest (*Requires login to Alexandras docker server)
 
-    - *(Alternatively to 3.)* docker save docker.alexandra.dk/<...\>:latest > <...\>.tar 
+    - *(Alternatively to 3.)* docker save docker.alexandra.dk/coral-data-collection-\<...\>:latest > <...\>.tar 
 
     - *(Alternatively to 3.)* Move .tar file to target machine and run "docker load --input <...\>.tar"
 
