@@ -10,8 +10,9 @@ import { theme } from './theme.ts'
 import { connect } from 'extendable-media-recorder-wav-encoder'
 import { register } from 'extendable-media-recorder'
 import {
-  experimental_formDataLink,
   httpBatchLink,
+  httpLink,
+  isNonJsonSerializable,
   splitLink,
 } from '@trpc/client'
 import { trpc } from './trpc.ts'
@@ -28,8 +29,8 @@ const queryClient = new QueryClient()
 const trpcClient = trpc.createClient({
   links: [
     splitLink({
-      condition: op => op.input instanceof FormData,
-      true: experimental_formDataLink({
+      condition: op => isNonJsonSerializable(op.input),
+      true: httpLink({
         url,
       }),
       false: httpBatchLink({

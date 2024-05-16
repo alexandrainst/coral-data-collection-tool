@@ -1,8 +1,4 @@
 import { initTRPC } from '@trpc/server'
-import {
-  experimental_createMemoryUploadHandler,
-  experimental_parseMultipartFormData,
-} from '@trpc/server/adapters/node-http/content-type/form-data'
 import { ZodError } from 'zod'
 import { Context } from './context'
 
@@ -29,12 +25,3 @@ const t = initTRPC.context<Context>().create({
  */
 export const router = t.router
 export const publicProcedure = t.procedure
-export const formProcedure = publicProcedure.use(opts =>
-  opts.next({
-    getRawInput: () =>
-      experimental_parseMultipartFormData(
-        opts.ctx.req,
-        experimental_createMemoryUploadHandler()
-      ),
-  })
-)

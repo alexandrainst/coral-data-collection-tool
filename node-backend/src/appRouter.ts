@@ -9,7 +9,7 @@ import {
   Speaker,
   SpeakerSchema,
 } from '../types'
-import { formProcedure, publicProcedure, router } from './trpc'
+import { publicProcedure, router } from './trpc'
 import { getId, log, saveRecodingFile } from './util'
 
 export const appRouter = router({
@@ -71,7 +71,7 @@ export const appRouter = router({
       return sentence
     }),
 
-  recording: formProcedure
+  recording: publicProcedure
     .input(RecordingFormDataSchema)
     .output(z.string())
     .mutation(opts => {
