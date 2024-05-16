@@ -1,13 +1,37 @@
+import countries from '../../common_assets/countries.json' assert { type: 'json' }
+import languages from '../../common_assets/languages.json' assert { type: 'json' }
 import selectables from './assets/selectables.json' assert { type: 'json' }
 import { type RouterInputs } from './trpc'
 import { SupervisorInputData, UserInputData } from './types'
 
-export const countryOptions = Object.values(selectables.countries).sort(
-  (a, b) => a.localeCompare(b, 'da', { sensitivity: 'accent' })
-)
-export const languageOptions = Object.values(selectables.languages).sort(
-  (a, b) => a.localeCompare(b, 'da', { sensitivity: 'accent' })
-)
+const COUNTRY_CODES_PRIORITIES = [
+  'DK',
+  'GB-ENG',
+  'DE',
+  'FR',
+  'SE',
+  'NO',
+].reverse()
+
+const LANGUAGE_CODES_PRIORITIES = ['da', 'en', 'de', 'fr', 'sv', 'no'].reverse()
+
+export const countryOptions = Object.entries(countries)
+  .sort((a, b) => a[1].localeCompare(b[1], 'da', { sensitivity: 'accent' }))
+  .sort(
+    (a, b) =>
+      COUNTRY_CODES_PRIORITIES.indexOf(b[0]) -
+      COUNTRY_CODES_PRIORITIES.indexOf(a[0])
+  )
+  .map(l => l[1])
+
+export const languageOptions = Object.entries(languages)
+  .sort((a, b) => a[1].localeCompare(b[1], 'da', { sensitivity: 'accent' }))
+  .sort(
+    (a, b) =>
+      LANGUAGE_CODES_PRIORITIES.indexOf(b[0]) -
+      LANGUAGE_CODES_PRIORITIES.indexOf(a[0])
+  )
+  .map(c => c[1])
 
 export const dimensionsRegex = new RegExp('^\\d{1,},\\d{1,},\\d{1,}$')
 export const dimensionsInputRegex = new RegExp('^(?:\\d{1,},){0,2}\\d*$')
@@ -56,7 +80,7 @@ export const generateEmptySupervisorData = (): SupervisorInputData => ({
 export const userInputDataToServerType = (
   data: UserInputData
 ): RouterInputs['user'] => {
-  const languages = Object.entries(selectables.languages)
+  const languagesList = Object.entries(languages)
   return {
     name: data.name,
     email: data.email,
@@ -64,17 +88,16 @@ export const userInputDataToServerType = (
     gender: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
     dialect: data.dialect,
     language_native:
-      languages.find(e => e[1] === data.nativeLanguage)?.[0] ??
+      languagesList.find(e => e[1] === data.nativeLanguage)?.[0] ??
       data.nativeLanguage,
     language_spoken: data.spokenLanguages.map(
-      l => languages.find(e => e[1] === l)?.[0] ?? l
+      l => languagesList.find(e => e[1] === l)?.[0] ?? l
     ),
     zip_school: Number(data.postalCodeSchool),
     zip_childhood: Number(data.postalCodeAddress),
     country_birth:
-      Object.entries(selectables.countries).find(
-        c => c[1] === data.placeOfBirth
-      )?.[0] ?? data.placeOfBirth,
+      Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
+      data.placeOfBirth,
     education: data.levelOfEducation,
     occupation: data.occupation,
   }

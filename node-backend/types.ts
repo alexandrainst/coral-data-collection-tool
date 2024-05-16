@@ -1,10 +1,10 @@
-import countryNames from 'countries-list/minimal/countries.en.min.json'
-import languageNames from 'countries-list/minimal/languages.en.min.json'
+import countries from '../common_assets/countries.json'
+import languages from '../common_assets/languages.json'
 import { z } from 'zod'
 import { zfd } from 'zod-form-data'
 
-const COUNTRY_CODES = Object.keys(countryNames)
-const LANGUAGE_CODES = Object.keys(languageNames)
+const COUNTRY_CODES = Object.keys(countries)
+const LANGUAGE_CODES = Object.keys(languages)
 
 export const SpeakerSchema = z.object({
   id_speaker: z.optional(z.string()),
