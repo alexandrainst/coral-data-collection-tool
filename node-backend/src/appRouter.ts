@@ -22,7 +22,7 @@ export const appRouter = router({
       const speaker = {
         ...opts.input,
         zip_school: opts.input.zip_school.toString(),
-        zip_childhood: opts.input.zip_childhood.toString(),
+        zip_birth: opts.input.zip_birth.toString(),
         language_native: opts.input.language_native.toString(),
         language_spoken: opts.input.language_spoken.toString(),
         id_speaker: `spe_${getId(opts.input.email)}`,
@@ -32,7 +32,7 @@ export const appRouter = router({
         opts.ctx.db
           .prepare(
             `INSERT INTO speakers VALUES
-           (@id_speaker, @name, @email, @age, @gender, @dialect, @language_native, @language_spoken, @zip_school, @zip_childhood, @country_birth, @education, @occupation, NULL)`
+           (@id_speaker, @name, @email, @age, @gender, @dialect, @language_native, @language_spoken, @zip_school, @zip_birth, @country_birth, @education, @occupation, NULL)`
           )
           .run(speaker)
       } catch (e: unknown) {
@@ -63,7 +63,9 @@ export const appRouter = router({
       const start = performance.now()
 
       const sentence = opts.ctx.db
-        .prepare('SELECT * FROM sentences ORDER BY random() LIMIT 1')
+        .prepare(
+          'SELECT * FROM sentences WHERE flag_sample = 1 ORDER BY random() LIMIT 1'
+        )
         .get() as Sentence
 
       const end = performance.now()
@@ -97,7 +99,7 @@ export const appRouter = router({
         opts.ctx.db
           .prepare(
             `INSERT INTO recordings VALUES
-           (@id_recording, @id_sentence, @id_speaker, @location, @dim_room, @noise_level, @noise_type, @datetime_start, @datetime_end, NULL, NULL)`
+           (@id_recording, @id_sentence, @id_speaker, @location, @location_dim, @noise_level, @noise_type, @datetime_start, @datetime_end, NULL, NULL)`
           )
           .run(recording)
       } catch (e: unknown) {

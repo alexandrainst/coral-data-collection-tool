@@ -164,7 +164,7 @@ function App() {
       formData.append('id_speaker', id_speaker.current)
       formData.append('location', supervisorData.recordingAddress)
       formData.append(
-        'dim_room',
+        'location_dim',
         [
           supervisorData.roomHeight,
           supervisorData.roomWidth,
