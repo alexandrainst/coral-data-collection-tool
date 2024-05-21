@@ -94,7 +94,7 @@ export const userInputDataToServerType = (
       l => languagesList.find(e => e[1] === l)?.[0] ?? l
     ),
     zip_school: Number(data.postalCodeSchool),
-    zip_childhood: Number(data.postalCodeAddress),
+    zip_birth: Number(data.postalCodeAddress),
     country_birth:
       Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
       data.placeOfBirth,

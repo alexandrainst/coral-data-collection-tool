@@ -23,7 +23,7 @@ export const SpeakerSchema = z.object({
       arr.every(langCode => LANGUAGE_CODES.some(code => code === langCode))
     ),
   zip_school: z.number(),
-  zip_childhood: z.number(),
+  zip_birth: z.number(),
   country_birth: z
     .string()
     .refine(countryCode => COUNTRY_CODES.some(code => code === countryCode)),
@@ -37,7 +37,7 @@ export const RecordingSchema = z.object({
   id_sentence: z.string(),
   id_speaker: z.string(),
   location: z.string(),
-  dim_room: z.string(),
+  location_dim: z.string(),
   noise_level: z.string(),
   noise_type: z.string(),
   datetime_start: z.string().datetime(),
