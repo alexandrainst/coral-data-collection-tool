@@ -57,7 +57,7 @@ export const generateEmptyUserData = (): UserInputData => ({
   email: '',
   name: '',
   age: '',
-  sex: '',
+  gender: '',
   dialect: '',
   nativeLanguage: '',
   spokenLanguages: [],
@@ -77,7 +77,7 @@ export const generateEmptySupervisorData = (): SupervisorInputData => ({
   roomLength: '',
 })
 
-export const userInputDataToServerType = (
+export const createSpeakerType = (
   data: UserInputData
 ): RouterInputs['user'] => {
   const languagesList = Object.entries(languages)
@@ -85,16 +85,18 @@ export const userInputDataToServerType = (
     name: data.name,
     email: data.email,
     age: Number(data.age),
-    gender: selectables.sexes.find(s => s.label === data.sex)?.code ?? data.sex,
-    dialect: data.dialect,
+    gender:
+      selectables.genders.find(s => s.label === data.gender)?.code ??
+      data.gender,
+    dialect: data.dialect.toLowerCase(),
     language_native:
       languagesList.find(e => e[1] === data.nativeLanguage)?.[0] ??
       data.nativeLanguage,
     language_spoken: data.spokenLanguages.map(
       l => languagesList.find(e => e[1] === l)?.[0] ?? l
     ),
-    zip_school: Number(data.postalCodeSchool),
-    zip_birth: Number(data.postalCodeAddress),
+    zipcode_school: Number(data.postalCodeSchool),
+    zipcode_birth: Number(data.postalCodeAddress),
     country_birth:
       Object.entries(countries).find(c => c[1] === data.placeOfBirth)?.[0] ??
       data.placeOfBirth,

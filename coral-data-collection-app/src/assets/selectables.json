@@ -1,9 +1,9 @@
 {
   "noiseTypes": ["Ingen", "Trafik", "Mennesker"],
-  "sexes": [
-    { "label": "Mand (inklusiv trans-mand)", "code": "M" },
-    { "label": "Kvinde (inklusiv trans-kvinde)", "code": "F" },
-    { "label": "Non-binær", "code": "N" }
+  "genders": [
+    { "label": "Mand (inklusiv trans-mand)", "code": "male" },
+    { "label": "Kvinde (inklusiv trans-kvinde)", "code": "female" },
+    { "label": "Non-binær", "code": "nonbinary" }
   ],
   "levelsOfEducation": [
     "Grundskole",

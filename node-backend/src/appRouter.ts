@@ -10,7 +10,12 @@ import {
   SpeakerSchema,
 } from '../types'
 import { publicProcedure, router } from './trpc'
-import { getId, log, saveRecodingFile } from './util'
+import {
+  convertISO8601ToCustomFormat,
+  getId,
+  log,
+  saveRecodingFile,
+} from './util'
 
 export const appRouter = router({
   user: publicProcedure
@@ -21,8 +26,8 @@ export const appRouter = router({
 
       const speaker = {
         ...opts.input,
-        zip_school: opts.input.zip_school.toString(),
-        zip_birth: opts.input.zip_birth.toString(),
+        zip_school: opts.input.zipcode_school.toString(),
+        zip_birth: opts.input.zipcode_birth.toString(),
         language_native: opts.input.language_native.toString(),
         language_spoken: opts.input.language_spoken.toString(),
         id_speaker: `spe_${getId(opts.input.email)}`,
@@ -92,6 +97,8 @@ export const appRouter = router({
 
       const recording = {
         ...opts.input,
+        datetime_start: convertISO8601ToCustomFormat(opts.input.datetime_start),
+        datetime_end: convertISO8601ToCustomFormat(opts.input.datetime_end),
         id_recording: `rec_${getId(speaker.email + opts.input.datetime_end)}`,
       }
 

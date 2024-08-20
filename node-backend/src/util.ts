@@ -52,3 +52,6 @@ export const log = (message?: unknown, ...optionalParams: unknown[]): void => {
 export const getId = (str: string): string => {
   return int32ToUint32(adler32.str(str)).toString()
 }
+
+export const convertISO8601ToCustomFormat = (isoDateString: string) =>
+  isoDateString.replace(/T/, ' ').replace(/\..+/, '')
