@@ -1,5 +1,4 @@
-import int32ToUint32 from '@stdlib/number-int32-base-to-uint32'
-import adler32 from 'adler-32'
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
@@ -49,8 +48,22 @@ export const log = (message?: unknown, ...optionalParams: unknown[]): void => {
   console.log(`[${new Date().toISOString()}]`, message, ...optionalParams)
 }
 
-export const getId = (str: string): string => {
-  return int32ToUint32(adler32.str(str)).toString()
+export const getSpeakerId = (email: string): string => {
+  return `spe_${hash(email)}`
+}
+
+export const getRecordingId = (
+  speakerId: string,
+  sentenceId: string,
+  datetimeEnd: string
+): string => {
+  return `rec_${hash(speakerId + sentenceId + datetimeEnd)}`
+}
+
+const hash = (str: string): string => {
+  const hash = createHash('md5')
+  hash.update(str)
+  return hash.digest('hex')
 }
 
 export const convertISO8601ToCustomFormat = (isoDateString: string) =>

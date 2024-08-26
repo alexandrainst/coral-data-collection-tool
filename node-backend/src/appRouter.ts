@@ -12,7 +12,8 @@ import {
 import { publicProcedure, router } from './trpc'
 import {
   convertISO8601ToCustomFormat,
-  getId,
+  getRecordingId,
+  getSpeakerId,
   log,
   saveRecodingFile,
 } from './util'
@@ -29,7 +30,7 @@ export const appRouter = router({
         zipcode_school: opts.input.zipcode_school.toString(),
         zipcode_birth: opts.input.zipcode_birth.toString(),
         language_spoken: opts.input.language_spoken.toString(),
-        id_speaker: `spe_${getId(opts.input.email)}`,
+        id_speaker: getSpeakerId(opts.input.email),
       }
       try {
         // TODO: Update user if already exists?
@@ -98,7 +99,11 @@ export const appRouter = router({
         ...opts.input,
         datetime_start: convertISO8601ToCustomFormat(opts.input.datetime_start),
         datetime_end: convertISO8601ToCustomFormat(opts.input.datetime_end),
-        id_recording: `rec_${getId(speaker.email + opts.input.datetime_end)}`,
+        id_recording: getRecordingId(
+          opts.input.id_speaker,
+          opts.input.id_sentence,
+          opts.input.datetime_end
+        ),
       }
 
       try {
