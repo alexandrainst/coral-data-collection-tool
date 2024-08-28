@@ -29,7 +29,7 @@ import {
   generateEmptySupervisorData,
   generateEmptyUserData,
   languageOptions,
-  userInputDataToServerType,
+  createSpeakerType,
   validDimensionsInput,
   validEmail,
   validNumber,
@@ -42,22 +42,21 @@ import selectables from './assets/selectables.json' assert { type: 'json' }
 import { trpc } from './trpc.ts'
 import { TermsComponent } from './termsComponent.tsx'
 
+const USER_DATA_TOKEN = 'userDataToken'
+const SUPERVISOR_DATA_TOKEN = 'supervisorDataToken'
+const AUDIO_FORMAT = 'wav'
+const REC_STOP_MS = 1000
+
 const dialectOptions: DialectOption[] = Object.entries(
   selectables.dialects
 ).flatMap(entry =>
   entry[1].map(dialect => ({ group: entry[0], label: dialect }))
 )
 
-const USER_DATA_TOKEN = 'userDataToken'
-const SUPERVISOR_DATA_TOKEN = 'supervisorDataToken'
-const AUDIO_FORMAT = 'wav'
-
 const validUserDataKeys = new Set<string>(Object.keys(generateEmptyUserData()))
 const validSupervisorDataKeys = new Set<string>(
   Object.keys(generateEmptySupervisorData())
 )
-
-const REC_STOP_MS = 1000
 
 function App() {
   const { t } = useTranslation('common')
@@ -164,7 +163,7 @@ function App() {
       formData.append('id_speaker', id_speaker.current)
       formData.append('location', supervisorData.recordingAddress)
       formData.append(
-        'location_dim',
+        'location_roomdim',
         [
           supervisorData.roomHeight,
           supervisorData.roomWidth,
@@ -319,7 +318,7 @@ function App() {
       age: validNumber(Number(userData.age), 1, 100)
         ? ''
         : t('ageErrorText', { min: 1, max: 100 }),
-      sex: basicValidText(userData.sex) ? '' : t('sexErrorText'),
+      gender: basicValidText(userData.gender) ? '' : t('genderErrorText'),
       dialect: basicValidText(userData.dialect) ? '' : t('dialectErrorText'),
       nativeLanguage: basicValidText(userData.nativeLanguage)
         ? ''
@@ -360,7 +359,7 @@ function App() {
     if (!invalidInput) {
       localStorage.setItem(USER_DATA_TOKEN, JSON.stringify(userData))
       userDataMutation
-        .mutateAsync(userInputDataToServerType(userData))
+        .mutateAsync(createSpeakerType(userData))
         .then(e => (id_speaker.current = e))
     }
     setDisplayUserDataDialog(invalidInput)
@@ -711,27 +710,27 @@ function App() {
             onChange={handleUserDataTextFieldChange}
           />
           <Autocomplete
-            id="sex"
+            id="gender"
             size="medium"
             fullWidth
-            options={selectables.sexes}
+            options={selectables.genders}
             getOptionLabel={option => option.label}
             value={
-              selectables.sexes.find(s => s.label === userData.sex) || null
+              selectables.genders.find(s => s.label === userData.gender) || null
             }
             renderInput={params => (
               <TextField
                 {...params}
                 required
-                error={userDataErrors.sex !== ''}
-                helperText={userDataErrors.sex}
+                error={userDataErrors.gender !== ''}
+                helperText={userDataErrors.gender}
                 variant="standard"
-                label={t('sex')}
+                label={t('gender')}
                 margin="dense"
               />
             )}
             onChange={(_e, v) =>
-              handleUserDataSelectChange('sex', v?.label ?? '')
+              handleUserDataSelectChange('gender', v?.label ?? '')
             }
           />
 
