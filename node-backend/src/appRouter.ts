@@ -12,7 +12,8 @@ import {
 import { publicProcedure, router } from './trpc'
 import {
   convertISO8601ToCustomFormat,
-  getId,
+  getRecordingId,
+  getSpeakerId,
   log,
   saveRecodingFile,
 } from './util'
@@ -26,18 +27,17 @@ export const appRouter = router({
 
       const speaker = {
         ...opts.input,
-        zip_school: opts.input.zipcode_school.toString(),
-        zip_birth: opts.input.zipcode_birth.toString(),
-        language_native: opts.input.language_native.toString(),
+        zipcode_school: opts.input.zipcode_school.toString(),
+        zipcode_birth: opts.input.zipcode_birth.toString(),
         language_spoken: opts.input.language_spoken.toString(),
-        id_speaker: `spe_${getId(opts.input.email)}`,
+        id_speaker: getSpeakerId(opts.input.email),
       }
       try {
         // TODO: Update user if already exists?
         opts.ctx.db
           .prepare(
             `INSERT INTO speakers VALUES
-           (@id_speaker, @name, @email, @age, @gender, @dialect, @language_native, @language_spoken, @zip_school, @zip_birth, @country_birth, @education, @occupation, NULL)`
+           (@id_speaker, @name, @email, @age, @gender, @dialect, @language_native, @language_spoken, @zipcode_school, @zipcode_birth, @country_birth, @education, @occupation, NULL)`
           )
           .run(speaker)
       } catch (e: unknown) {
@@ -99,14 +99,18 @@ export const appRouter = router({
         ...opts.input,
         datetime_start: convertISO8601ToCustomFormat(opts.input.datetime_start),
         datetime_end: convertISO8601ToCustomFormat(opts.input.datetime_end),
-        id_recording: `rec_${getId(speaker.email + opts.input.datetime_end)}`,
+        id_recording: getRecordingId(
+          opts.input.id_speaker,
+          opts.input.id_sentence,
+          opts.input.datetime_end
+        ),
       }
 
       try {
         opts.ctx.db
           .prepare(
             `INSERT INTO recordings VALUES
-           (@id_recording, @id_sentence, @id_speaker, @location, @location_dim, @noise_level, @noise_type, @datetime_start, @datetime_end, NULL, NULL)`
+           (@id_recording,  @id_speaker, @id_sentence, @location, @location_roomdim, @noise_level, @noise_type, @datetime_start, @datetime_end, NULL, NULL)`
           )
           .run(recording)
       } catch (e: unknown) {

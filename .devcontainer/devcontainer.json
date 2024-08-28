@@ -24,7 +24,8 @@
 				"42Crunch.vscode-openapi",
 				"matthewpi.caddyfile-support",
 				"DavidAnson.vscode-markdownlint",
-				"qwtel.sqlite-viewer"
+				"qwtel.sqlite-viewer",
+				"eamodio.gitlens"
 			],
             "settings": {
                 "[markdown]": {
