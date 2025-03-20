@@ -1,11 +1,13 @@
 FROM node:20-bullseye
 
-COPY package.json package.json
-COPY package-lock.json ../package-lock.json
+WORKDIR /app
+
+RUN apt-get update -q -y && \
+    apt-get install -q -y sqlite3
+
+COPY . .
+
 RUN npm install --omit=dev
+RUN npm run build:server
 
-RUN apt update; apt install sqlite3
-
-COPY dist/ dist/
-
-CMD NODE_ENV=production node dist/node-backend/src/index.js
+ENTRYPOINT ["npm", "run", "start:server"]

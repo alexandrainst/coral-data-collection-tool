@@ -2,6 +2,8 @@
     "name": "root",
     "private": true,
     "scripts": {
+        "start:client": "npm start -w coral-data-collection-app",
+        "start:server": "npm start -w node-backend",
         "build:client": "npm run build -w coral-data-collection-app",
         "build:server": "npm run build -w node-backend",
         "build": "run-s build:server build:client",

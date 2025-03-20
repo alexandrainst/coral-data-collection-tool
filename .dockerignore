@@ -1,0 +1,6 @@
+.devcontainer
+.github
+node_modules
+dist
+Dockerfile
+scripts

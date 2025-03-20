@@ -1,20 +1,23 @@
 services:
   backend:
-    image: docker.alexandra.dk/coral-data-collection-backend:latest
+    build:
+      dockerfile: node-backend/Dockerfile
     container_name: coral-data-collection-backend
     restart: unless-stopped
     volumes:
-      - ./path/relative/to/docker-compose.yml:${CORAL_DATA_DIR}
+      - $HOME/Documents/CoRal_Recorder/data:${CORAL_DATA_DIR}
     ports:
-      - "${CORAL_PORT}:${CORAL_PORT}"
+      - 3333:3333
     expose:
-      - ${CORAL_PORT}
+      - 3333
     environment:
-     - CORAL_PORT=${CORAL_PORT}
-     - CORAL_DATA_DIR=${CORAL_DATA_DIR}
+     - CORAL_PORT=3333
+     - CORAL_DATA_DIR=/files
+     - CORAL_FIXTURE_DIR=/app/node-backend/fixtures
 
   frontend:
-    image: docker.alexandra.dk/coral-data-collection-frontend:latest
+    build:
+      dockerfile: coral-data-collection-app/Dockerfile
     container_name: coral-data-collection-frontend
     restart: unless-stopped
     expose:

@@ -14,11 +14,14 @@ let dbConn: Database
 export function getDB(): Database {
   if (!dbPath) {
     log('Ensuring DB PATH')
-    const dataPath = ensureDataDir()
-    dbPath = join(dataPath, 'db.sqlite')
+    dbPath = join(ensureDataDir(), 'db.sqlite')
     if (!existsSync(dbPath)) {
       log('Creating DB from fixtures')
-      copyFileSync(resolve(dataPath, 'fixtures/sentences.sqlite'), dbPath)
+      const fixtureDir = 
+        process.env.NODE_ENV === 'production'
+          ? process.env.CORAL_FIXTURE_DIR ?? '/'
+          : `${__dirname}/..`
+      copyFileSync(resolve(fixtureDir, 'sentences.sqlite'), dbPath)
     }
   }
 
